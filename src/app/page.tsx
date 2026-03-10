@@ -51,34 +51,12 @@ const itemVariants = {
   },
 };
 
-const shakeAnimation = {
-  x: [0, -10, 10, -8, 8, -5, 5, 0],
-  transition: { duration: 0.6 },
-};
+// const shakeAnimation = {
+//   x: [0, -10, 10, -8, 8, -5, 5, 0],
+//   transition: { duration: 0.6 },
+// };
 const Home = () => {
   const snap = useSnapshot(state);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-
-  const handleLogin = (e: any) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      setError(true);
-      return;
-    }
-
-    setError(false);
-    setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-      state.intro = false;
-    }, 1500);
-  };
 
   return (
     <main className="relative w-full h-screen overflow-hidden">

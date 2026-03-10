@@ -1,26 +1,53 @@
-"use client"
+"use client";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import state from "../store";
-import {auth} from "@/lib/firebase";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { FirebaseError } from "firebase/app";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
+  const [name, setName] = useState(""); // Solo para registro
+  const [isLogin, setIsLogin] = useState(true);
+  const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
-    if (!email || !password) {
-      setError(true);
-      return;
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password,
+        );
+        await updateProfile(userCredential.user, { displayName: name });
+      }
+      router.push("/customize"); // Redirige a la página de personalización después del login/registro exitoso
+      router.refresh(); // Refresca la página para actualizar el estado de autenticación
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        const errorMessages: Record<string, string> = {
+          "auth/email-already-in-use": "Este correo ya está registrado.",
+          "auth/invalid-credential": "Credenciales incorrectas.",
+          "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
+          "auth/invalid-email": "El formato del correo no es válido.",
+        };
+        setError(errorMessages[error.code] || "Ocurrió un error inesperado.");
+      }
     }
-
-    setError(false);
-    setLoading(true);
 
     setTimeout(() => {
       state.triggerSpin = true;
@@ -88,7 +115,16 @@ const LoginForm = () => {
         disabled={loading}
         className="bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold transition-all"
       >
-        {loading ? "Cargando..." : "Login"}
+        {isLogin ? "Entrar" : "Registrarse"}
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={()=> setIsLogin(!isLogin)}
+        disabled={loading}
+        className="mt-4 text-blue-600 hover:underline text-sm"
+      >
+        {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
       </motion.button>
     </motion.form>
   );
