@@ -35,7 +35,7 @@ const LoginForm = () => {
         );
         await updateProfile(userCredential.user, { displayName: name });
       }
-      router.push("/customize"); // Redirige a la página de personalización después del login/registro exitoso
+      router.push("/"); // Redirige a la página de personalización después del login/registro exitoso
       router.refresh(); // Refresca la página para actualizar el estado de autenticación
     } catch (error) {
       if (error instanceof FirebaseError) {
