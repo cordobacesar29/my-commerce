@@ -15,7 +15,7 @@ const Home = () => {
   const snap = useSnapshot(state);
 
   return (
-    <main className="relative w-full h-screen overflow-hidden transition-all ease-in ">
+    <main className="relative w-full h-screen overflow-hidden transition-all ease-in pt-12">
       <AnimatePresence>
         {snap.intro && (
           <motion.section
