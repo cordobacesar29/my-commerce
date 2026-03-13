@@ -30,63 +30,6 @@ export default function HeroSection() {
     },
   };
 
-  // Variantes para el contenedor principal de animaciones
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1, // Retraso entre cada elemento secundario (letras y luego otros bloques)
-        delayChildren: 0.3, // Retraso inicial antes de empezar
-      },
-    },
-  };
-
-  // Variantes para cada letra individual
-  const letterVariants: Variants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  // Variantes para los bloques de texto secundarios y botones (fade up estándar)
-  const fadeUpVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  // Función para dividir texto en letras animables
-  const AnimatedText = ({ text, className, ...props }: { text: string; className?: string; [key: string]: any }) => {
-    return (
-      <motion.span className={`inline-block ${className}`} {...props}>
-        {text.split("").map((letter, index) => (
-          <motion.span
-            key={index}
-            variants={letterVariants}
-            className="inline-block"
-            // Mantenemos el espacio en blanco
-            style={{ marginRight: letter === " " ? "0.25em" : "0" }}
-          >
-            {letter}
-          </motion.span>
-        ))}
-      </motion.span>
-    );
-  };
-
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background glow */}
@@ -132,7 +75,7 @@ export default function HeroSection() {
 
             <motion.h1
               variants={fadeUp}
-              className="font-[family-name:var(--font-archivo)] font-[900] uppercase leading-[0.85] mb-6"
+              className="font-(family-name:--font-archivo) font-black uppercase leading-[0.85] mb-6"
               style={{
                 fontSize: "clamp(4rem, 12vw, 6.5rem)", // Tamaño masivo
               }}
@@ -140,7 +83,7 @@ export default function HeroSection() {
               <span className="text-white drop-shadow-2xl">Vestí lo que</span>
               <br />
               <span
-                className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-[#C8A96E]"
+                className="bg-clip-text text-transparent bg-linear-to-b from-white via-white to-[#C8A96E]"
                 style={{
                   filter: "drop-shadow(0 0 20px rgba(200, 169, 110, 0.3))",
                 }}
@@ -249,7 +192,7 @@ export default function HeroSection() {
             transition={{ duration: 1 }}
             className="relative flex items-center justify-center"
           >
-            <div className="relative flex items-center justify-center w-full h-[520px] max-w-[420px]">
+            <div className="relative flex items-center justify-center w-full h-130 max-w-105">
               <CanvasModel />
             </div>
 
