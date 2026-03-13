@@ -17,7 +17,7 @@ const Shirt = () => {
 
   // rotación / inercia
   const isDragging = useRef(false);
-  // const lastX = useRef(0);
+  const lastX = useRef(0);
   const rotationSpeed = useRef(0);
   const damping = 0.92;
 
@@ -144,16 +144,6 @@ const Shirt = () => {
         material-roughness={1}
         dispose={null}
       >
-        {snap.isFullTexture && (
-          <Decal
-            position={[0, 0, 0]}
-            rotation={[0, 0, 0]}
-            scale={1}
-            map={fullTexture}
-          />
-        )}
-
-        {snap.isLogoTexture && (
           <Decal
             position={[0, 0.04, 0.15]}
             rotation={[0, 0, 0]}
@@ -163,7 +153,6 @@ const Shirt = () => {
             depthWrite={false}
             anisotropy={16}
           />
-        )}
       </mesh>
     </group>
   );
