@@ -1,29 +1,30 @@
+"use client";
+
 import { Canvas } from "@react-three/fiber";
 import { Environment, Center } from "@react-three/drei";
-
 import Shirt from "./Shirt";
-import Backdrop from "./Backdrop";
-import CameraRig from "./CameraRig";
+import { Suspense } from "react";
 
-const CanvasModel = () => {
+export default function CanvasModel() {
   return (
     <Canvas
       shadows
-      camera={{position: [0,0,0], fov: 25}}
-      gl={{preserveDrawingBuffer: true}}
-      className="w-full max-w-full h-full transition-all ease-in"
+      dpr={[1, 1.5]}
+      gl={{ preserveDrawingBuffer: true }}
+      camera={{ position: [0, 0, 3], fov: 35 }}
     >
-      <ambientLight intensity={0.5} />
-      <Environment preset="city" />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[5, 5, 5]} intensity={1} />
 
-      <CameraRig>
-        <Backdrop />
-        <Center>
-          <Shirt />
-        </Center>
-      </CameraRig>
+      <Center>
+        <group scale={1.4}>
+          <Suspense fallback={<mesh />}>
+            <Shirt />
+          </Suspense>
+        </group>
+      </Center>
+
+      <Environment preset="city" />
     </Canvas>
   );
-};
-
-export default CanvasModel;
+}
