@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Archivo } from "next/font/google"; // Importamos Archivo
 //@ts-ignore
 import './globals.css'
 import Header from "@/components/Header";
@@ -10,15 +10,22 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-};
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// Esta es la clave para el diseño de letras grandes y pesadas
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"], // El 900 es vital para el Hero
+});
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "Ramón Store",
@@ -36,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} antialiased`}
       >
         <AuthProvider>
           <Header />
