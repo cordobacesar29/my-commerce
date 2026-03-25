@@ -83,7 +83,7 @@ export default function HowItWorks() {
 
             {/* Título Masivo - Estilo Teeforge */}
             <motion.h2
-              className="text-white font-[900] uppercase  leading-[0.8]"
+              className="text-white font-black uppercase  leading-[0.8]"
               style={{ fontSize: "clamp(3rem, 6vw, 5rem)" }}
             >
               De la idea
@@ -178,9 +178,11 @@ export default function HowItWorks() {
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="mt-20 text-center">
-          <Link href="/design-studio" className="btn-primary group">
+        <div className="mt-10 text-center flex flex-col items-center">
+          <Link
+            href="/design-studio"
+            className="btn-primary group flex justify-center items-center gap-2"
+          >
             <span className="font-bold">Crear mi primera remera</span>
             <Icon
               name="ArrowRightIcon"
