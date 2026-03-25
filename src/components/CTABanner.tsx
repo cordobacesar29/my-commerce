@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Icon from "@/components/ui/AppIcon";
+import { CTABannerButton } from "./CTABannerButton";
 
 export default function CTABanner() {
   const iconsAndLabelsArray = [
@@ -7,6 +7,7 @@ export default function CTABanner() {
     { icon: "TruckIcon", label: "Envío a todo el país" },
     { icon: "ArrowPathIcon", label: "Garantía de satisfacción" },
   ];
+
   return (
     <section className="pt-20 relative">
       <div className="max-w-7xl mx-auto px-6">
@@ -43,17 +44,7 @@ export default function CTABanner() {
             </p>
 
             {/* Botones estilo Imagen */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-              <Link
-                href="/design-studio"
-                className="group relative flex items-center gap-2 bg-[#C8A96E] hover:bg-[#B6965D] text-black font-bold py-4 px-10 transition-all duration-300"
-              >
-                <span className="uppercase tracking-wider text-sm">
-                  Crear mi diseño ahora
-                </span>
-                <Icon name="SparklesIcon" size={18} variant="solid" />
-              </Link>
-            </div>
+            <CTABannerButton />
 
             {/* Separador fino */}
             <div className="w-full h-px bg-[#C8A96E]/20 mb-20" />
