@@ -3,12 +3,15 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, Variants } from "framer-motion";
+import { useProtectedNavigation } from "@/hooks/useProtectedNavigation";
 
 const CanvasModel = dynamic(() => import("@/canvas"), {
   ssr: false,
 });
 
 export default function HeroSection() {
+  const { navigateTo } = useProtectedNavigation();
+
   const fadeUp: Variants = {
     hidden: { opacity: 0, y: 40 },
     show: {
@@ -114,11 +117,14 @@ export default function HeroSection() {
 
             <motion.div variants={fadeUp} className="flex flex-wrap gap-6 mt-4">
               {/* BOTÓN PRIMARIO CON GLOW */}
-              <Link href="/design-studio" className="relative group">
+              <button
+                onClick={() => navigateTo("/design-studio")}
+                className="relative group"
+              >
                 {/* Capa de brillo animada al fondo */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-yellow-300 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
+                <div className="absolute -inset-0.5 bg-linear-to-r from-amber-500 to-yellow-300 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
 
-                <button className="relative px-8 py-4 bg-black rounded-lg leading-none flex items-center divide-x divide-gray-600">
+                <div className="relative px-8 py-4 bg-black rounded-lg leading-none flex items-center divide-x divide-gray-600">
                   <span className="pr-6 text-gray-100 font-bold tracking-wide">
                     Empezar a diseñar
                   </span>
@@ -139,8 +145,8 @@ export default function HeroSection() {
                       <path d="M13 5l7 7-7 7" />
                     </svg>
                   </span>
-                </button>
-              </Link>
+                </div>
+              </button>
 
               {/* BOTÓN SECUNDARIO (BORDE FINO) */}
               <div className="relative group">
