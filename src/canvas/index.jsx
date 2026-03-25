@@ -17,7 +17,7 @@ export default function CanvasModel() {
       <directionalLight position={[5, 5, 5]} intensity={1} />
 
       <Center>
-        <group scale={1.4}>
+        <group scale={2.5}>
           <Suspense fallback={<mesh />}>
             <Shirt />
           </Suspense>

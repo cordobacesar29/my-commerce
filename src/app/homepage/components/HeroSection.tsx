@@ -69,7 +69,11 @@ export default function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* LEFT CONTENT */}
           <motion.div variants={stagger} initial="hidden" animate="show">
-            <motion.div variants={fadeUp} className="tag mb-8 border border-gray-600/20 text-sm font-bold uppercase tracking-widest w-max p-2" style={{ color: "var(--accent-gold)" }}>
+            <motion.div
+              variants={fadeUp}
+              className="tag mb-8 border border-gray-600/20 text-sm font-bold uppercase tracking-widest w-max p-2"
+              style={{ color: "var(--accent-gold)" }}
+            >
               Diseño con IA + Visualización 3D
             </motion.div>
 
@@ -133,8 +137,8 @@ export default function HeroSection() {
 
               {/* BOTÓN SECUNDARIO (BORDE FINO) */}
               <Link href="/homepage#how-it-works" className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-yellow-300 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
-              <button className="relative px-8 py-4 bg-black rounded-lg leading-none flex items-center divide-x divide-gray-600">
+                <div className="absolute -inset-0.5 bg-linear-to-r from-amber-500 to-yellow-300 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
+                <button className="relative px-8 py-4 bg-black rounded-lg leading-none flex items-center divide-x divide-gray-600">
                   <span className="pr-6 text-gray-100 font-bold tracking-wide">
                     Cómo funciona
                   </span>
@@ -238,7 +242,7 @@ export default function HeroSection() {
                   className="text-xs uppercase tracking-widest"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Pedido confirmado
+                  ALGODÓN 100% PEINADO
                 </span>
               </div>
 
@@ -246,11 +250,11 @@ export default function HeroSection() {
                 className="text-sm font-bold"
                 style={{ color: "var(--text-primary)" }}
               >
-                Valentina M. · Camiseta IA
+                Gramaje: 190g/m² (Heavyweight)
               </div>
 
               <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Enviando en 48hs · Buenos Aires
+                Corte: Oversize Premium · Sin costuras
               </div>
             </motion.div>
           </motion.div>

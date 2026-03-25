@@ -12,9 +12,7 @@ const Shirt = () => {
   const shirtRef = useRef();
   const meshRef = useRef();
   const logoTexture = useTexture(snap.logoDecal);
-  const fullTexture = useTexture(snap.fullDecal);
   const autoRotateSpeed = 0.8; // radianes por segundo (velocidad media)
-
   // rotación / inercia
   const isDragging = useRef(false);
   const lastX = useRef(0);
@@ -147,7 +145,7 @@ const Shirt = () => {
           <Decal
             position={[0, 0.04, 0.15]}
             rotation={[0, 0, 0]}
-            scale={0.15}
+            scale={.25}
             map={logoTexture}
             depthTest={true}
             depthWrite={false}
