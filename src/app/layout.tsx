@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Archivo } from "next/font/google"; // Importamos Arc
 import './globals.css'
 import Header from "@/components/Header";
 import { AuthProvider } from "@/context/AuthContext";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({
         <AuthProvider>
           <Header />
           {children}
+          <Footer />
         </AuthProvider>
       </body>
     </html>
