@@ -1,28 +1,17 @@
 "use client";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import { useAuthActions } from "@/hooks/useAuthActions";
 
 export const LogoutButton = () => {
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-
-      router.push("/login");
-      router.refresh(); // Forzamos actualización para que el Middleware actúe
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  };
+  // Extraemos las funciones y estados correctos del hook
+  const { logout, loading } = useAuthActions();
 
   return (
     <button
-      onClick={handleLogout}
-      className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors cursor-pointer"
+      onClick={logout}
+      disabled={loading}
+      className="px-4 py-2 bg-red-500/10 hover:bg-red-500 border border-red-500/20 hover:border-red-500 text-red-500 hover:text-white text-[10px] font-bold uppercase tracking-widest rounded-md transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      Cerrar Sesión
+      {loading ? "Cerrando sesión..." : "Cerrar Sesión"}
     </button>
   );
 };
