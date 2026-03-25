@@ -1,3 +1,4 @@
+import CTABanner from '@/components/CTABanner';
 import HeroSection from '@/components/HeroSection';
 import HowItWorks from '@/components/HowItWorks';
 import { Metadata } from 'next';
@@ -14,6 +15,7 @@ export const HomePage = () => {
     <div className="relative min-h-screen text-white">
       <HeroSection />
       <HowItWorks />
+      <CTABanner />
     </div>
   )
 }
