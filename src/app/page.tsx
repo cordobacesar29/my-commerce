@@ -4,7 +4,7 @@ import HowItWorks from '@/components/HowItWorks';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-title: "Ramón Store — Diseñá tu remera con IA y visualizala en 3D",
+title: "Ramón Store - Home",
 description:
   "Describí tu idea, nuestra IA la convierte en diseño único. Visualizalo en 3D y pedí tu remera personalizada. Envío en 48hs a toda Argentina.",
 keywords: "remeras personalizadas, diseño con IA, remeras 3D, Argentina",
