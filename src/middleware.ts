@@ -1,17 +1,20 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const session = request.cookies.get("token")?.value;
-  const isCostumizePage = request.nextUrl.pathname.startsWith("/costumize");
+  const { pathname } = request.nextUrl;
 
-  if (isCostumizePage && !session) {
-    return NextResponse.redirect(new URL("/", request.url));
+  const isCustomizePage = pathname.startsWith("/customize");
+
+  if (isCustomizePage && !session) {
+    // Si no hay sesión, al login
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/customize/:path*", "/"],
+  // Ya no necesitas el "/" aquí si no vas a redirigir la raíz
+  matcher: ["/customize/:path*"],
 };

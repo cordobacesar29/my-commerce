@@ -1,5 +1,21 @@
-// src/app/page.tsx
-export default function RootPage() {
-  // Este contenido nunca se mostrará debido al redirect en next.config.ts
-  return null;
+import HeroSection from '@/components/HeroSection';
+import HowItWorks from '@/components/HowItWorks';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+title: "Ramón Store — Diseñá tu remera con IA y visualizala en 3D",
+description:
+  "Describí tu idea, nuestra IA la convierte en diseño único. Visualizalo en 3D y pedí tu remera personalizada. Envío en 48hs a toda Argentina.",
+keywords: "remeras personalizadas, diseño con IA, remeras 3D, Argentina",
+};
+
+export const HomePage = () => {
+  return (
+    <div className="relative min-h-screen text-white">
+      <HeroSection />
+      <HowItWorks />
+    </div>
+  )
 }
+
+export default HomePage;

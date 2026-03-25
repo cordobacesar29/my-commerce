@@ -29,6 +29,13 @@ export default function HeroSection() {
       },
     },
   };
+  const scrollToHowItWorks = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const element = document.getElementById("how-it-works");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -136,9 +143,12 @@ export default function HeroSection() {
               </Link>
 
               {/* BOTÓN SECUNDARIO (BORDE FINO) */}
-              <Link href="/homepage#how-it-works" className="relative group">
+              <div className="relative group">
                 <div className="absolute -inset-0.5 bg-linear-to-r from-amber-500 to-yellow-300 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
-                <button className="relative px-8 py-4 bg-black rounded-lg leading-none flex items-center divide-x divide-gray-600">
+                <button
+                  onClick={scrollToHowItWorks}
+                  className="relative px-8 py-4 bg-black rounded-lg leading-none flex items-center divide-x divide-gray-600"
+                >
                   <span className="pr-6 text-gray-100 font-bold tracking-wide">
                     Cómo funciona
                   </span>
@@ -160,7 +170,7 @@ export default function HeroSection() {
                     </svg>
                   </span>
                 </button>
-              </Link>
+              </div>
             </motion.div>
 
             {/* STATS */}
