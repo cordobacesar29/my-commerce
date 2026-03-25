@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
 import Icon from "@/components/ui/AppIcon";
 import { motion } from "framer-motion";
 
@@ -11,7 +10,7 @@ const steps = [
     icon: "SparklesIcon" as const,
     title: "Describí tu idea",
     desc: "Escribí un prompt en lenguaje natural. Nuestra IA basada en DALL-E entiende tu visión y genera un diseño único al instante.",
-    detail: '"Una galaxia con un astronauta tocando guitarra eléctrica"',
+    detail: '"Un logo de un gato astronauta" · "Un diseño vintage de surf"',
     color: "#C8A96E",
   },
   {
@@ -19,7 +18,7 @@ const steps = [
     icon: "CubeIcon" as const,
     title: "Visualizalo en 3D",
     desc: "Tu diseño aparece sobre una remera 3D interactiva. Rotala, cambiá el color de la prenda y ajustá cada detalle en tiempo real.",
-    detail: "Giro 360° · 8 colores de tela · Vista frontal y dorsal",
+    detail: "Giro 360° · 3 colores de tela · Vista detallada del diseño",
     color: "#8B9EFF",
   },
   {
@@ -27,7 +26,7 @@ const steps = [
     icon: "TruckIcon" as const,
     title: "Pedí y recibí",
     desc: "Elegí talle, cantidad y pagá con Mercado Pago. Producimos e imprimimos tu remera con calidad premium y la enviamos a tu puerta.",
-    detail: "Envío en 48hs · Pago seguro · Garantía de satisfacción",
+    detail: "Envío a todo el país · Pago seguro · Garantía de satisfacción",
     color: "#4ade80",
   },
 ];
@@ -66,7 +65,7 @@ export default function HowItWorks() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         {/* Header de la sección */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-24 font-[family-name:var(--font-archivo)]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-24 font-(family-name:--font-archivo)">
           <div className="flex-1">
             {/* Tag con borde fino y tipografía técnica */}
             <motion.div className="inline-flex items-center gap-2 mb-8 border border-white/10 bg-white/5 px-3 py-1.5 rounded-sm">
@@ -176,20 +175,6 @@ export default function HowItWorks() {
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-10 text-center flex flex-col items-center">
-          <Link
-            href="/design-studio"
-            className="btn-primary group flex justify-center items-center gap-2"
-          >
-            <span className="font-bold">Crear mi primera remera</span>
-            <Icon
-              name="ArrowRightIcon"
-              size={16}
-              className="group-hover:translate-x-1 transition-transform"
-            />
-          </Link>
         </div>
       </div>
     </section>
