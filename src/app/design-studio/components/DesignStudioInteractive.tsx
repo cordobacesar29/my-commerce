@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/AppIcon";
+import dynamic from "next/dynamic";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface CartItem {
@@ -55,6 +56,7 @@ export default function DesignStudioInteractive() {
   const [isDragging, setIsDragging] = useState(false);
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState({ x: 0, y: 0.3 });
+  const [activeLogoPosition, setActiveLogoPosition] = useState("front_center");
 
   const totalPrice = BASE_PRICE * quantity;
 
@@ -407,9 +409,9 @@ export default function DesignStudioInteractive() {
   };
 
   return (
-    <div className="min-h-screen pt-24 bg-[var(--bg-primary)]">
+    <div className="min-h-screen pt-10">
       {/* Page header - Más minimalista y elegante */}
-      <header className="py-16 px-6 text-center relative overflow-hidden border-b border-[var(--border-subtle)]">
+      <header className="py-16 px-6 text-center relative overflow-hidden border-b border-[#C8A96E]">
         <div
           className="absolute inset-0 opacity-40 pointer-events-none"
           style={{
@@ -424,7 +426,7 @@ export default function DesignStudioInteractive() {
           </div>
           <h1 className="text-4xl md:text-5xl font-heading font-bold tracking-tight text-[var(--text-primary)] mb-4">
             Diseñá tu remera <br />
-            <span className="text-gradient-gold italic">
+            <span className="text-gradient-gold">
               con Inteligencia Artificial
             </span>
           </h1>
@@ -441,7 +443,7 @@ export default function DesignStudioInteractive() {
           {/* Left panel — Controls (Scrollable en desktop si es necesario) */}
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
             {/* AI Generator Panel */}
-            <section className="studio-panel overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-2xl">
+            <section className="studio-panel overflow-hidden border border-[#C8A96E]  shadow-2xl">
               <div className="p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -462,10 +464,10 @@ export default function DesignStudioInteractive() {
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Describí tu idea artística..."
-                    className="resize-none w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] p-4 text-sm text-[var(--text-primary)] focus:border-[var(--accent-gold)] focus:ring-1 focus:ring-[var(--accent-gold)] transition-all outline-none min-h-[120px]  placeholder:text-[var(--text-muted)]/50 shadow-inner"
+                    className="resize-none w-full bg-[var(--bg-elevated)] border border-[#C8A96E] p-4 text-sm text-[var(--text-primary)] focus:border-[var(--accent-gold)] focus:ring-1 focus:ring-[var(--accent-gold)] transition-all outline-none min-h-[120px]  placeholder:text-[var(--text-muted)]/50 shadow-inner"
                   />
                   <div className="absolute bottom-3 right-3 opacity-0 group-focus-within:opacity-100 transition-opacity">
-                    <kbd className="text-[10px] bg-[var(--bg-primary)] px-2 py-1  border border-[var(--border-subtle)] text-[var(--text-muted)]">
+                    <kbd className="text-[10px] bg-[var(--bg-primary)] px-2 py-1  border border-[#C8A96E] text-[var(--text-muted)]">
                       Enter para generar
                     </kbd>
                   </div>
@@ -481,7 +483,7 @@ export default function DesignStudioInteractive() {
                       <button
                         key={p}
                         onClick={() => setPrompt(p)}
-                        className="text-[10px] px-3 py-1.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-all active:scale-95"
+                        className="text-[10px] px-3 py-1.5 bg-[var(--bg-elevated)] border border-[#C8A96E] text-[var(--text-secondary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-all active:scale-95"
                       >
                         {p.length > 25 ? `${p.slice(0, 25)}...` : p}
                       </button>
@@ -504,24 +506,17 @@ export default function DesignStudioInteractive() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] transition-transform" />
                 </button>
               </div>
-
-              {/* Barra de progreso de IA */}
-              {isGenerating && (
-                <div className="h-1 w-full bg-[var(--bg-elevated)] relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[var(--accent-gold)] animate-[loading_2s_ease-in-out_infinite]" />
-                </div>
-              )}
             </section>
 
             {/* Customization Panel (Color & Talles) */}
-            <section className="studio-panel p-6 border border-[var(--border-subtle)] bg-[var(--bg-card)]  space-y-8">
+            <section className="studio-panel p-6 border border-[#C8A96E] bg-[var(--bg-card)]  space-y-8">
               {/* Color Selector */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
                   <h2 className="text-xs font-bold uppercase tracking-widest text-[var(--text-primary)]">
                     Color Base
                   </h2>
-                  <span className="text-[10px] text-[var(--accent-gold)] font-bold">
+                  <span className="text-[10px] font-bold">
                     {selectedColor.name}
                   </span>
                 </div>
@@ -554,7 +549,7 @@ export default function DesignStudioInteractive() {
                       className={`py-3 text-[10px] font-bold border transition-all ${
                         selectedSize === s
                           ? "bg-[var(--accent-gold)] border-[var(--accent-gold)] text-[var(--bg-primary)]"
-                          : "bg-transparent border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--text-secondary)]"
+                          : "bg-transparent border-[#C8A96E] text-[var(--text-muted)] hover:border-[var(--text-secondary)]"
                       }`}
                     >
                       {s}
@@ -565,7 +560,7 @@ export default function DesignStudioInteractive() {
             </section>
 
             {/* Checkout Panel */}
-            <section className="studio-panel p-6 border border-[var(--border-gold)]/30 bg-gradient-to-b from-[var(--bg-card)] to-[var(--bg-elevated)] shadow-xl">
+            <section className="studio-panel p-6 border border-[#C8A96E] bg-gradient-to-b from-[var(--bg-card)] to-[var(--bg-elevated)] shadow-xl">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter">
@@ -608,43 +603,34 @@ export default function DesignStudioInteractive() {
 
           {/* Right panel — 3D Viewport - El corazón del estudio */}
           <section className="lg:col-span-8 flex flex-col gap-6">
-            <div className="studio-panel relative aspect-[4/3] lg:aspect-auto lg:h-[700px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-2xl group">
+            <div className="studio-panel relative aspect-[4/3] lg:aspect-auto lg:h-[700px] overflow-hidden bg-[var(--bg-card)] shadow-2xl group">
               {/* Fondo decorativo del Canvas */}
               <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('/grid.svg')] bg-center [mask-image:radial-gradient(white,transparent)]" />
 
               {/* 3D Canvas Mock/Placeholder */}
-              <canvas
-                ref={canvasRef}
-                className="w-full h-full cursor-grab active:cursor-grabbing transition-transform"
-              />
+              <div className="relative flex items-center justify-center w-full h-130 max-w-105">
+                <CanvasModel logoPosition={activeLogoPosition} />
+              </div>
 
               {/* HUD del Viewer (Heads-up Display) */}
-              <div className="absolute top-6 left-6 flex items-center gap-3 pointer-events-none">
-                <div
-                  className={`px-3 py-1.5  backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all shadow-lg ${threeReady ? "bg-green-500/10" : "bg-orange-500/10"}`}
-                >
-                  <div
-                    className={`w-1.5 h-1.5  animate-pulse ${threeReady ? "bg-green-400" : "bg-orange-400"}`}
-                  />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">
-                    {threeReady ? "Motor 3D Renderizando" : "Sincronizando..."}
-                  </span>
-                </div>
-              </div>
 
               {/* Controles flotantes de Cámara */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5  bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                 {[
-                  { label: "Frente", y: 0 },
-                  { label: "Lateral", y: Math.PI / 2 },
-                  { label: "Espalda", y: Math.PI },
-                ].map((view) => (
+                  { label: "Frente", id: "front_center" },
+                  { label: "Pecho (Izq)", id: "front_chest" }, // NUEVO: La opción de pecho chico
+                  { label: "Espalda", id: "back_center" },
+                ].map((pos) => (
                   <button
-                    key={view.label}
-                    onClick={() => setRotation({ x: 0, y: view.y })}
-                    className="px-4 py-2 text-[9px] font-bold uppercase tracking-tighter text-white/60 hover:text-white hover:bg-white/10  transition-all"
+                    key={pos.id}
+                    onClick={() => setActiveLogoPosition(pos.id)}
+                    className={`px-4 py-2 text-[9px] font-bold uppercase tracking-tighter transition-all ${
+                      activeLogoPosition === pos.id
+                        ? "text-[var(--accent-gold)] bg-white/10" // ESTILO: Activo (usando la variable de oro)
+                        : "text-white/60 hover:text-white hover:bg-white/5" // ESTILO: Normal
+                    }`}
                   >
-                    {view.label}
+                    {pos.label}
                   </button>
                 ))}
               </div>
@@ -675,8 +661,8 @@ export default function DesignStudioInteractive() {
 
             {/* Info del diseño generado (si existe) */}
             {generatedDesign && (
-              <div className="p-6 border border-[var(--border-gold)]/40 bg-gradient-to-r from-[var(--bg-card)] to-transparent flex items-center gap-6 animate-slide-up">
-                <div className="w-20 h-20 overflow-hidden border border-[var(--border-subtle)] shadow-lg bg-black">
+              <div className="p-6 border border-[#C8A96E] bg-gradient-to-r from-[var(--bg-card)] to-transparent flex items-center gap-6 animate-slide-up">
+                <div className="w-20 h-20 overflow-hidden border border-[#C8A96E] shadow-lg bg-black">
                   <img
                     src={generatedDesign}
                     alt="Preview"
@@ -697,9 +683,6 @@ export default function DesignStudioInteractive() {
                     La resolución es apta para impresión DTG de alta definición.
                   </p>
                 </div>
-                <button className="ml-auto p-3  hover:bg-white/5 text-[var(--text-muted)] transition-colors">
-                  <Icon name="ArrowDownTrayIcon" size={20} />
-                </button>
               </div>
             )}
           </section>
@@ -708,3 +691,6 @@ export default function DesignStudioInteractive() {
     </div>
   );
 }
+const CanvasModel = dynamic(() => import("@/canvas"), {
+  ssr: false,
+});

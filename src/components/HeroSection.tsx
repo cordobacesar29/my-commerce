@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, Variants } from "framer-motion";
 import { useProtectedNavigation } from "@/hooks/useProtectedNavigation";
@@ -212,8 +211,8 @@ export default function HeroSection() {
             transition={{ duration: 1 }}
             className="relative flex items-center justify-center"
           >
-            <div className="relative flex items-center justify-center w-full h-130 max-w-105">
-              <CanvasModel />
+            <div className="flex items-center justify-center w-full h-130 max-w-105">
+              <CanvasModel autoRotate={true} />
             </div>
 
             {/* CARD IA */}

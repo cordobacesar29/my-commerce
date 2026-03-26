@@ -5,135 +5,113 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Decal, useGLTF, useTexture } from "@react-three/drei";
 import state from "../store";
 
-const Shirt = () => {
+// NUEVO: Configuraciones predefinidas para las ubicaciones del logo
+const LOGO_LOCATIONS = {
+  // Frente centrado (Valor por defecto)
+  front_center: {
+    position: [0, 0.04, 0.15],
+    rotation: [0, 0, 0],
+    scale: 0.25,
+  },
+  // Espalda centrada
+  back_center: {
+    position: [0, 0.1, -0.16], // Un poco más arriba y hacia atrás
+    rotation: [0, Math.PI, 0], // Rotación de 180° para que mire hacia atrás
+    scale: 0.23, // Un poquito más pequeño
+  },
+  // Pecho izquierdo (Lado del corazón)
+  front_chest: {
+    position: [0.100, 0.08, 0.125], // hacia la derecha 
+    rotation: [0, 0, 0],
+    scale: 0.14, // Lo achicamos un poco más para que sea más elegante
+  },
+  // Pecho izquierdo y espalda
+  front_and_back: {
+    
+  }
+};
+
+const Shirt = ({ customLogo = null, autoRotate = false, logoPosition = 'front_center' }) => {
   const snap = useSnapshot(state);
-  const { gl, size } = useThree(); // size.width -> pixels
+  const { gl, size } = useThree();
   const { nodes, materials } = useGLTF("/shirt_baked.glb");
+  
   const shirtRef = useRef();
   const meshRef = useRef();
-  const logoTexture = useTexture(snap.logoDecal);
-  const autoRotateSpeed = 0.8; // radianes por segundo (velocidad media)
-  // rotación / inercia
+  
+  const logoTexture = useTexture(customLogo || snap.logoDecal);
+  
+  const autoRotateSpeed = 0.8; 
   const isDragging = useRef(false);
   const lastX = useRef(0);
   const rotationSpeed = useRef(0);
   const damping = 0.92;
 
-  // Crear un material nuevo y limpio
+  // Sincronización de color
   useEffect(() => {
     if (materials.lambert1) {
-      // eliminar mapa de textura baked
       materials.lambert1.map = null;
       materials.lambert1.aoMap = null;
       materials.lambert1.lightMap = null;
-
-      // resetear color e iluminación
       materials.lambert1.color.set(snap.color || "#ffffff");
       materials.lambert1.needsUpdate = true;
     }
   }, [materials, snap.color]);
 
   useFrame((_state, delta) => {
-    // proteger contra materiales no cargados todavía
-    if (!materials?.lambert1) return;
-    if (!meshRef.current) return;
+    if (!materials?.lambert1 || !meshRef.current || !shirtRef.current) return;
 
-    // Rotación suave por hover
-    meshRef.current.rotation.y +=
-      (snap.shirtRotation - meshRef?.current.rotation.y) * 0.1;
-
-    // Escala suave por focus
-    meshRef?.current.scale.lerp(
-      { x: snap.shirtScale, y: snap.shirtScale, z: snap.shirtScale },
-      0.1,
-    );
-
-    // Spin épico al loguearse
-    if (snap.triggerSpin) {
-      meshRef.current.rotation.y += 0.2;
-    }
-
-    // suavizar color
+    meshRef.current.rotation.y += (snap.shirtRotation - meshRef.current.rotation.y) * 0.1;
+    meshRef.current.scale.lerp({ x: snap.shirtScale, y: snap.shirtScale, z: snap.shirtScale }, 0.1);
     easing.dampC(materials.lambert1.color, snap.color, 0.25, delta);
 
-    // aplicar inercia + auto rotación
-    if (!shirtRef.current) return;
-
     if (!isDragging.current) {
-      // giro automático constante
-      shirtRef.current.rotation.y += autoRotateSpeed * delta;
-
-      // mantener inercia si viene del drag
+      if (autoRotate) {
+        shirtRef.current.rotation.y += autoRotateSpeed * delta;
+      }
       rotationSpeed.current *= damping;
       if (Math.abs(rotationSpeed.current) < 1e-5) rotationSpeed.current = 0;
       shirtRef.current.rotation.y += rotationSpeed.current;
     }
   });
 
+  // Lógica de Mouse Events (se mantiene igual)
   useEffect(() => {
     const canvas = gl.domElement;
     if (!canvas) return;
-
-    // evita el scroll en mobile cuando arrastrás el canvas
     canvas.style.touchAction = "none";
-
     const getClientX = (e) => {
-      // soporta pointer events y touch events
       if (e.touches && e.touches[0]) return e.touches[0].clientX;
-      if (typeof e.clientX === "number") return e.clientX;
-      // fallback: algunos eventos de R3F traen nativeEvent
-      if (e.nativeEvent && typeof e.nativeEvent.clientX === "number")
-        return e.nativeEvent.clientX;
-      return 0;
+      return e.clientX ?? e.nativeEvent?.clientX ?? 0;
     };
-
     const onPointerDown = (e) => {
-      e.stopPropagation();
       isDragging.current = true;
       lastX.current = getClientX(e);
     };
-
     const onPointerMove = (e) => {
       if (!isDragging.current) return;
-      e.stopPropagation();
       const clientX = getClientX(e);
-      const delta = (clientX - lastX.current) / Math.max(size.width, 1); // normalizo por ancho en px
-      const rotationDelta = delta * Math.PI; // factor ajustable
-      if (shirtRef.current) shirtRef.current.rotation.y += rotationDelta;
-      rotationSpeed.current = rotationDelta;
+      const deltaRotation = ((clientX - lastX.current) / size.width) * Math.PI;
+      if (shirtRef.current) shirtRef.current.rotation.y += deltaRotation;
+      rotationSpeed.current = deltaRotation;
       lastX.current = clientX;
     };
-
-    const onPointerUp = (e) => {
-      e.stopPropagation();
-      isDragging.current = false;
-    };
-
-    // Registrar listeners en el canvas (más fiable para arrastrar fuera del mesh)
+    const onPointerUp = () => { isDragging.current = false; };
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-
-    // Touch como fallback
-    canvas.addEventListener("touchstart", onPointerDown, { passive: true });
-    canvas.addEventListener("touchmove", onPointerMove, { passive: true });
-    window.addEventListener("touchend", onPointerUp, { passive: true });
-
     return () => {
-      canvas.style.touchAction = "";
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
-      canvas.removeEventListener("touchstart", onPointerDown);
-      canvas.removeEventListener("touchmove", onPointerMove);
-      window.removeEventListener("touchend", onPointerUp);
     };
-  }, [gl, size.width]); // solo volver a registrar si cambia canvas o tamaño
+  }, [gl, size.width]);
 
-  const stateString = JSON.stringify(snap);
+  // NUEVO: Obtener la configuración actual. Si no existe la key, fallback al frente centrado.
+  const currentDecalConfig = LOGO_LOCATIONS[logoPosition] || LOGO_LOCATIONS['front_center'];
 
   return (
-    <group key={stateString} ref={shirtRef}>
+    <group ref={shirtRef}>
       <mesh
         ref={meshRef}
         castShadow
@@ -142,15 +120,13 @@ const Shirt = () => {
         material-roughness={1}
         dispose={null}
       >
-          <Decal
-            position={[0, 0.04, 0.15]}
-            rotation={[0, 0, 0]}
-            scale={.25}
-            map={logoTexture}
-            depthTest={true}
-            depthWrite={false}
-            anisotropy={16}
-          />
+        <Decal
+          {...currentDecalConfig} // NUEVO: Aplicamos position, rotation y scale dinámicamente
+          map={logoTexture}
+          anisotropy={16}
+          depthTest={true}
+          depthWrite={false}
+        />
       </mesh>
     </group>
   );
