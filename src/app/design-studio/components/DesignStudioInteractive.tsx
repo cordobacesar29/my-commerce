@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/AppIcon";
 import dynamic from "next/dynamic";
+import state from "@/store";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface CartItem {
@@ -57,7 +58,6 @@ export default function DesignStudioInteractive() {
   const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState({ x: 0, y: 0.3 });
   const [activeLogoPosition, setActiveLogoPosition] = useState("front_center");
-
   const totalPrice = BASE_PRICE * quantity;
 
   const formatPrice = (p: number) =>
@@ -377,8 +377,6 @@ export default function DesignStudioInteractive() {
     setLastMouse({ x: e.clientX, y: e.clientY });
   };
 
-  const handleMouseUp = () => setIsDragging(false);
-
   // ── Add to cart ──────────────────────────────────────────────────────
   const handleAddToCart = () => {
     const item: CartItem = {
@@ -407,7 +405,7 @@ export default function DesignStudioInteractive() {
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
   };
-
+  console.log("IMAG", generatedDesign);
   return (
     <div className="min-h-screen pt-10">
       {/* Page header - Más minimalista y elegante */}
@@ -524,7 +522,10 @@ export default function DesignStudioInteractive() {
                   {SHIRT_COLORS.map((c) => (
                     <button
                       key={c.hex}
-                      onClick={() => setSelectedColor(c)}
+                      onClick={() => {
+                        setSelectedColor(c);
+                        state.color = c.hex;
+                      }}
                       className={`relative w-8 h-8  transition-all hover:scale-110 ${
                         selectedColor.hex === c.hex
                           ? "ring-2 ring-[var(--accent-gold)] ring-offset-4 ring-offset-[var(--bg-card)] scale-110"
@@ -560,7 +561,7 @@ export default function DesignStudioInteractive() {
             </section>
 
             {/* Checkout Panel */}
-            <section className="studio-panel p-6 border border-[#C8A96E] bg-gradient-to-b from-[var(--bg-card)] to-[var(--bg-elevated)] shadow-xl">
+            <section className="studio-panel p-6 border border-[#C8A96E] bg-linear-to-b from-(--bg-card) to-[var(--bg-elevated)] shadow-xl">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter">
@@ -603,13 +604,17 @@ export default function DesignStudioInteractive() {
 
           {/* Right panel — 3D Viewport - El corazón del estudio */}
           <section className="lg:col-span-8 flex flex-col gap-6">
-            <div className="studio-panel relative aspect-[4/3] lg:aspect-auto lg:h-[700px] overflow-hidden bg-[var(--bg-card)] shadow-2xl group">
+            <div className="studio-panel relative aspect-[4/3] lg:aspect-auto lg:h-[700px] overflow-hidden group">
               {/* Fondo decorativo del Canvas */}
-              <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('/grid.svg')] bg-center [mask-image:radial-gradient(white,transparent)]" />
+              <div className="absolute inset-0 opacity-20 pointer-events-none bg-center" />
 
               {/* 3D Canvas Mock/Placeholder */}
-              <div className="relative flex items-center justify-center w-full h-130 max-w-105">
-                <CanvasModel logoPosition={activeLogoPosition} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <CanvasModel
+                  logoPosition={activeLogoPosition}
+                  //@ts-ignore
+                  customLogo={generatedDesign ?? null}
+                />
               </div>
 
               {/* HUD del Viewer (Heads-up Display) */}

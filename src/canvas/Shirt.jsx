@@ -4,6 +4,7 @@ import { useSnapshot } from "valtio";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Decal, useGLTF, useTexture } from "@react-three/drei";
 import state from "../store";
+import * as THREE from "three";
 
 // NUEVO: Configuraciones predefinidas para las ubicaciones del logo
 const LOGO_LOCATIONS = {
@@ -25,10 +26,6 @@ const LOGO_LOCATIONS = {
     rotation: [0, 0, 0],
     scale: 0.14, // Lo achicamos un poco más para que sea más elegante
   },
-  // Pecho izquierdo y espalda
-  front_and_back: {
-    
-  }
 };
 
 const Shirt = ({ customLogo = null, autoRotate = false, logoPosition = 'front_center' }) => {
@@ -40,27 +37,37 @@ const Shirt = ({ customLogo = null, autoRotate = false, logoPosition = 'front_ce
   const meshRef = useRef();
   
   const logoTexture = useTexture(customLogo || snap.logoDecal);
+
+  useEffect(() => {
+    if (logoTexture) {
+      logoTexture.colorSpace = THREE.SRGBColorSpace; // Para que los colores se vean bien
+      logoTexture.needsUpdate = true;
+      logoTexture.anisotropy = 16;
+    }
+  }, [logoTexture, customLogo]);
   
   const autoRotateSpeed = 0.8; 
   const isDragging = useRef(false);
   const lastX = useRef(0);
   const rotationSpeed = useRef(0);
   const damping = 0.92;
-
+const material = materials.lambert1;
   // Sincronización de color
   useEffect(() => {
-    if (materials.lambert1) {
-      materials.lambert1.map = null;
-      materials.lambert1.aoMap = null;
-      materials.lambert1.lightMap = null;
-      materials.lambert1.color.set(snap.color || "#ffffff");
-      materials.lambert1.needsUpdate = true;
+    if (material) {
+      material.map = null;
+      material.aoMap = null;
+      material.lightMap = null;
+      //materials.lambert1.color.set(snap.color || "#ffffff");
+      material.needsUpdate = true;
     }
-  }, [materials, snap.color]);
+  }, [material]);
 
   useFrame((_state, delta) => {
     if (!materials?.lambert1 || !meshRef.current || !shirtRef.current) return;
 
+    easing.dampC(material.color, snap.color, 0.25, delta);
+    
     meshRef.current.rotation.y += (snap.shirtRotation - meshRef.current.rotation.y) * 0.1;
     meshRef.current.scale.lerp({ x: snap.shirtScale, y: snap.shirtScale, z: snap.shirtScale }, 0.1);
     easing.dampC(materials.lambert1.color, snap.color, 0.25, delta);
@@ -119,6 +126,7 @@ const Shirt = ({ customLogo = null, autoRotate = false, logoPosition = 'front_ce
         material={materials.lambert1}
         material-roughness={1}
         dispose={null}
+        key={customLogo || 'default'}
       >
         <Decal
           {...currentDecalConfig} // NUEVO: Aplicamos position, rotation y scale dinámicamente
