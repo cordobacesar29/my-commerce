@@ -2,8 +2,6 @@
 
 import DesignStudioInteractive from "./DesignStudioInteractive";
 
-
-
 export default function DesignStudioClient() {
   return (
     <div

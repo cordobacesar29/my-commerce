@@ -18,26 +18,14 @@ interface CartItem {
 }
 
 const SHIRT_COLORS = [
-  { hex: "#0A0A0A", name: "Negro Profundo" },
-  { hex: "#1a1a2e", name: "Azul Noche" },
-  { hex: "#1a0a0a", name: "Vino Oscuro" },
-  { hex: "#0d1a0d", name: "Verde Bosque" },
-  { hex: "#F5F0E8", name: "Crema Natural" },
-  { hex: "#2d2d2d", name: "Gris Carbón" },
-  { hex: "#8B0000", name: "Rojo Oscuro" },
-  { hex: "#1C1C3C", name: "Navy Premium" },
+  { hex: "#000000", name: "Negro" },
+  { hex: "#2d2d2d", name: "Gris" },
+  { hex: "#F5F0E8", name: "Blanco" },
 ];
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
-const AI_PROMPTS = [
-  "Galaxia neon con astronauta flotando entre planetas",
-  "Lobo geométrico low-poly con luna llena dorada",
-  "Ciudad cyberpunk bajo la lluvia con neones rojos",
-  "Dragón japonés con flores de cerezo y montañas",
-  "Tigre abstracto con líneas neon y fondo oscuro",
-  "Selva tropical con tucán y colores vibrantes",
-];
+const AI_PROMPTS = ["Lobo geométrico low-poly con luna llena dorada"];
 
 const BASE_PRICE = 4500;
 
@@ -93,7 +81,7 @@ export default function DesignStudioInteractive() {
           40,
           canvas.clientWidth / canvas.clientHeight,
           0.1,
-          100
+          100,
         );
         camera.position.set(0, 0, 4.5);
 
@@ -226,7 +214,7 @@ export default function DesignStudioInteractive() {
           threeRef.current.camera.updateProjectionMatrix();
           threeRef.current.renderer.setSize(
             canvas.clientWidth,
-            canvas.clientHeight
+            canvas.clientHeight,
           );
         };
         window.addEventListener("resize", onResize);
@@ -302,43 +290,42 @@ export default function DesignStudioInteractive() {
   };
 
   // ── Update design texture ──────────────────────────────────────────────
-  const updateDesignTexture = useCallback(
-    async (imageUrl: string) => {
-      if (!threeRef.current) return;
-      const THREE = await import("three");
-      const designCanvas = document.createElement("canvas");
-      designCanvas.width = 512;
-      designCanvas.height = 512;
-      const ctx = designCanvas.getContext("2d")!;
+  const updateDesignTexture = useCallback(async (imageUrl: string) => {
+    if (!threeRef.current) return;
+    const THREE = await import("three");
+    const designCanvas = document.createElement("canvas");
+    designCanvas.width = 512;
+    designCanvas.height = 512;
+    const ctx = designCanvas.getContext("2d")!;
 
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        ctx.clearRect(0, 0, 512, 512);
-        ctx.drawImage(img, 56, 56, 400, 400);
-        const tex = new THREE.CanvasTexture(designCanvas);
-        const mat = threeRef.current!.designMesh.material as import("three").MeshBasicMaterial;
-        mat.map = tex;
-        mat.needsUpdate = true;
-      };
-      img.onerror = () => {
-        // Fallback: draw gradient design
-        const grad = ctx.createLinearGradient(0, 0, 512, 512);
-        grad.addColorStop(0, "rgba(200,169,110,0.9)");
-        grad.addColorStop(1, "rgba(139,158,255,0.9)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(256, 256, 200, 0, Math.PI * 2);
-        ctx.fill();
-        const tex = new THREE.CanvasTexture(designCanvas);
-        const mat = threeRef.current!.designMesh.material as import("three").MeshBasicMaterial;
-        mat.map = tex;
-        mat.needsUpdate = true;
-      };
-      img.src = imageUrl;
-    },
-    []
-  );
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      ctx.clearRect(0, 0, 512, 512);
+      ctx.drawImage(img, 56, 56, 400, 400);
+      const tex = new THREE.CanvasTexture(designCanvas);
+      const mat = threeRef.current!.designMesh
+        .material as import("three").MeshBasicMaterial;
+      mat.map = tex;
+      mat.needsUpdate = true;
+    };
+    img.onerror = () => {
+      // Fallback: draw gradient design
+      const grad = ctx.createLinearGradient(0, 0, 512, 512);
+      grad.addColorStop(0, "rgba(200,169,110,0.9)");
+      grad.addColorStop(1, "rgba(139,158,255,0.9)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(256, 256, 200, 0, Math.PI * 2);
+      ctx.fill();
+      const tex = new THREE.CanvasTexture(designCanvas);
+      const mat = threeRef.current!.designMesh
+        .material as import("three").MeshBasicMaterial;
+      mat.map = tex;
+      mat.needsUpdate = true;
+    };
+    img.src = imageUrl;
+  }, []);
 
   // ── AI Generate ──────────────────────────────────────────────────────
   const handleGenerate = async () => {
@@ -406,7 +393,7 @@ export default function DesignStudioInteractive() {
 
     try {
       const existing = JSON.parse(
-        localStorage.getItem("teeforge-cart") || "[]"
+        localStorage.getItem("teeforge-cart") || "[]",
       ) as CartItem[];
       existing.push(item);
       localStorage.setItem("teeforge-cart", JSON.stringify(existing));
@@ -420,479 +407,304 @@ export default function DesignStudioInteractive() {
   };
 
   return (
-    <div
-      className="min-h-screen pt-24"
-      style={{ background: "var(--bg-primary)" }}
-    >
-      {/* Page header */}
-      <div
-        className="py-12 px-6 text-center relative overflow-hidden"
-        style={{ borderBottom: "1px solid var(--border-subtle)" }}
-      >
+    <div className="min-h-screen pt-24 bg-[var(--bg-primary)]">
+      {/* Page header - Más minimalista y elegante */}
+      <header className="py-16 px-6 text-center relative overflow-hidden border-b border-[var(--border-subtle)]">
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-40 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 60% 80% at 50% 50%, rgba(200,169,110,0.08) 0%, transparent 70%)",
+              "radial-gradient(circle at 50% 50%, rgba(200,169,110,0.1) 0%, transparent 70%)",
           }}
         />
-        <div className="relative z-10">
-          <div className="tag mx-auto mb-4" style={{ display: "inline-flex" }}>
-            <Icon name="SparklesIcon" size={10} variant="solid" />
-            Estudio de Diseño IA
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1  bg-[var(--accent-gold)]/10 border border-[var(--accent-gold)]/20 text-[var(--accent-gold)] text-[10px] uppercase tracking-[0.2em] font-bold mb-6 animate-fade-in">
+            <Icon name="SparklesIcon" size={12} variant="solid" />
+            IA Creative Studio
           </div>
-          <h1
-            className="text-section"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Diseñá tu remera
-            <br />
-            <span className="text-gradient-gold">con inteligencia artificial.</span>
+          <h1 className="text-4xl md:text-5xl font-heading font-bold tracking-tight text-[var(--text-primary)] mb-4">
+            Diseñá tu remera <br />
+            <span className="text-gradient-gold italic">
+              con Inteligencia Artificial
+            </span>
           </h1>
+          <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto leading-relaxed">
+            Transformá tus ideas en prendas únicas. Nuestra IA genera diseños
+            exclusivos listos para estampar en calidad premium.
+          </p>
         </div>
-      </div>
+      </header>
 
-      {/* Main studio */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid lg:grid-cols-12 gap-8">
-          {/* Left panel — controls */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            {/* AI Prompt */}
-            <div className="studio-panel p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <Icon
-                  name="SparklesIcon"
-                  size={16}
-                  variant="solid"
-                  style={{ color: "var(--accent-gold)" } as React.CSSProperties}
-                />
-                <h2
-                  className="text-sm font-heading font-bold uppercase tracking-widest"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  Describí tu diseño
-                </h2>
-              </div>
-
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Ej: Un dragón cósmico rodeado de estrellas y nebulosas en colores azul y dorado..."
-                className="input-field resize-none mb-4"
-                rows={4}
-                style={{ borderRadius: "0" }}
-              />
-
-              {/* Quick prompts */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {AI_PROMPTS.slice(0, 3).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPrompt(p)}
-                    className="text-xs px-2 py-1 transition-all"
-                    style={{
-                      background: "var(--bg-elevated)",
-                      border: "1px solid var(--border-subtle)",
-                      color: "var(--text-muted)",
-                      cursor: "pointer",
-                      fontSize: "0.65rem",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--accent-gold)";
-                      e.currentTarget.style.color = "var(--accent-gold)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--border-subtle)";
-                      e.currentTarget.style.color = "var(--text-muted)";
-                    }}
-                  >
-                    {p.slice(0, 28)}…
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={handleGenerate}
-                disabled={!prompt.trim() || isGenerating}
-                className="btn-primary w-full justify-center"
-                style={{
-                  opacity: !prompt.trim() || isGenerating ? 0.6 : 1,
-                  cursor:
-                    !prompt.trim() || isGenerating ? "not-allowed" : "pointer",
-                }}
-              >
-                {isGenerating ? (
-                  <>
-                    <span>Generando con IA</span>
-                    <div className="flex gap-1">
-                      {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className="w-1 h-1 rounded-full"
-                          style={{
-                            background: "var(--bg-primary)",
-                            animation: `pulse 1s ease-in-out ${i * 0.2}s infinite`,
-                          }}
-                        />
-                      ))}
+      {/* Main studio layout */}
+      <main className="max-w-[1400px] mx-auto px-6 py-12">
+        <div className="grid lg:grid-cols-12 gap-10 items-start">
+          {/* Left panel — Controls (Scrollable en desktop si es necesario) */}
+          <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
+            {/* AI Generator Panel */}
+            <section className="studio-panel overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-2xl">
+              <div className="p-6 space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-[var(--accent-gold)]/10 text-[var(--accent-gold)]">
+                      <Icon name="SparklesIcon" size={18} variant="solid" />
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <span>Generar diseño</span>
-                    <Icon name="SparklesIcon" size={16} variant="solid" />
-                  </>
-                )}
-              </button>
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-[var(--text-primary)]">
+                      Concepto Visual
+                    </h2>
+                  </div>
+                  <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                    STEP 01
+                  </span>
+                </div>
 
-              {isGenerating && (
-                <div className="mt-4">
-                  <div className="flex flex-col gap-1.5">
-                    {[0, 1, 2, 3].map((i) => (
-                      <div key={i} className={`ai-bar`} style={{ width: `${50 + i * 15}%` }} />
+                <div className="relative group">
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="Describí tu idea artística..."
+                    className="resize-none w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] p-4 text-sm text-[var(--text-primary)] focus:border-[var(--accent-gold)] focus:ring-1 focus:ring-[var(--accent-gold)] transition-all outline-none min-h-[120px]  placeholder:text-[var(--text-muted)]/50 shadow-inner"
+                  />
+                  <div className="absolute bottom-3 right-3 opacity-0 group-focus-within:opacity-100 transition-opacity">
+                    <kbd className="text-[10px] bg-[var(--bg-primary)] px-2 py-1  border border-[var(--border-subtle)] text-[var(--text-muted)]">
+                      Enter para generar
+                    </kbd>
+                  </div>
+                </div>
+
+                {/* Sugerencias Estilizadas */}
+                <div className="space-y-2">
+                  <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-bold">
+                    Sugerencias rápidas
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {AI_PROMPTS.slice(0, 3).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setPrompt(p)}
+                        className="text-[10px] px-3 py-1.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-all active:scale-95"
+                      >
+                        {p.length > 25 ? `${p.slice(0, 25)}...` : p}
+                      </button>
                     ))}
                   </div>
-                  <p
-                    className="text-xs mt-2"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {/* ⚠️ Mock: real DALL-E API would generate here */}
-                    Procesando con IA… (demo: imagen de muestra)
+                </div>
+
+                <button
+                  onClick={handleGenerate}
+                  disabled={!prompt.trim() || isGenerating}
+                  className="group relative w-full py-4 bg-[var(--accent-gold)] text-[var(--bg-primary)] font-bold uppercase text-xs tracking-[0.2em] overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(200,169,110,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    {isGenerating ? "Procesando Arte..." : "Generar Diseño"}
+                    {!isGenerating && (
+                      <Icon name="SparklesIcon" size={14} variant="solid" />
+                    )}
+                  </div>
+                  {/* Animación de brillo al pasar el mouse */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] transition-transform" />
+                </button>
+              </div>
+
+              {/* Barra de progreso de IA */}
+              {isGenerating && (
+                <div className="h-1 w-full bg-[var(--bg-elevated)] relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[var(--accent-gold)] animate-[loading_2s_ease-in-out_infinite]" />
+                </div>
+              )}
+            </section>
+
+            {/* Customization Panel (Color & Talles) */}
+            <section className="studio-panel p-6 border border-[var(--border-subtle)] bg-[var(--bg-card)]  space-y-8">
+              {/* Color Selector */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-[var(--text-primary)]">
+                    Color Base
+                  </h2>
+                  <span className="text-[10px] text-[var(--accent-gold)] font-bold">
+                    {selectedColor.name}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  {SHIRT_COLORS.map((c) => (
+                    <button
+                      key={c.hex}
+                      onClick={() => setSelectedColor(c)}
+                      className={`relative w-8 h-8  transition-all hover:scale-110 ${
+                        selectedColor.hex === c.hex
+                          ? "ring-2 ring-[var(--accent-gold)] ring-offset-4 ring-offset-[var(--bg-card)] scale-110"
+                          : "opacity-70 hover:opacity-100"
+                      }`}
+                      style={{ background: c.hex }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Size Selector - Más minimalista */}
+              <div className="space-y-4">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-[var(--text-primary)]">
+                  Talle
+                </h2>
+                <div className="grid grid-cols-5 gap-2">
+                  {SIZES.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedSize(s)}
+                      className={`py-3 text-[10px] font-bold border transition-all ${
+                        selectedSize === s
+                          ? "bg-[var(--accent-gold)] border-[var(--accent-gold)] text-[var(--bg-primary)]"
+                          : "bg-transparent border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--text-secondary)]"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Checkout Panel */}
+            <section className="studio-panel p-6 border border-[var(--border-gold)]/30 bg-gradient-to-b from-[var(--bg-card)] to-[var(--bg-elevated)] shadow-xl">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-tighter">
+                    Inversión Total
+                  </p>
+                  <p className="text-3xl font-heading font-bold text-[var(--text-primary)]">
+                    {formatPrice(totalPrice)}
                   </p>
                 </div>
-              )}
-            </div>
-
-            {/* Color picker */}
-            <div className="studio-panel p-6">
-              <h2
-                className="text-sm font-heading font-bold uppercase tracking-widest mb-5"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Color de la remera
-              </h2>
-              <div className="flex flex-wrap gap-3">
-                {SHIRT_COLORS.map((c) => (
-                  <button
-                    key={c.hex}
-                    onClick={() => setSelectedColor(c)}
-                    className={`color-swatch ${
-                      selectedColor.hex === c.hex ? "active" : ""
-                    }`}
-                    style={{ background: c.hex }}
-                    title={c.name}
-                    aria-label={`Color ${c.name}`}
-                  />
-                ))}
-              </div>
-              <p
-                className="text-xs mt-3 font-heading uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Seleccionado:{" "}
-                <span style={{ color: "var(--accent-gold)" }}>
-                  {selectedColor.name}
-                </span>
-              </p>
-            </div>
-
-            {/* Size & quantity */}
-            <div className="studio-panel p-6">
-              <h2
-                className="text-sm font-heading font-bold uppercase tracking-widest mb-5"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Talle y cantidad
-              </h2>
-
-              {/* Sizes */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {SIZES.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    className="w-10 h-10 text-xs font-heading font-bold uppercase transition-all"
-                    style={{
-                      background:
-                        selectedSize === s
-                          ? "var(--accent-gold)"
-                          : "var(--bg-elevated)",
-                      color:
-                        selectedSize === s
-                          ? "var(--bg-primary)"
-                          : "var(--text-muted)",
-                      border:
-                        selectedSize === s
-                          ? "1px solid var(--accent-gold)"
-                          : "1px solid var(--border-subtle)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-
-              {/* Quantity */}
-              <div className="flex items-center gap-3">
-                <span
-                  className="text-xs font-heading uppercase tracking-wider"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Cantidad:
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    className="qty-btn"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    aria-label="Disminuir cantidad"
-                  >
-                    −
-                  </button>
-                  <span
-                    className="w-8 text-center font-heading font-bold"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {quantity}
-                  </span>
-                  <button
-                    className="qty-btn"
-                    onClick={() => setQuantity((q) => Math.min(20, q + 1))}
-                    aria-label="Aumentar cantidad"
-                  >
-                    +
-                  </button>
+                <div className="text-right">
+                  <p className="text-[10px] text-[var(--text-muted)] uppercase">
+                    Cantidad
+                  </p>
+                  <div className="flex items-center gap-3 bg-[var(--bg-primary)] px-2 py-1 border border-[var(--border-subtle)] mt-1">
+                    <button
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      className="text-[var(--text-muted)] hover:text-[var(--accent-gold)]"
+                    >
+                      -
+                    </button>
+                    <span className="text-xs font-bold min-w-[20px] text-center">
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={() => setQuantity((q) => Math.min(20, q + 1))}
+                      className="text-[var(--text-muted)] hover:text-[var(--accent-gold)]"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Price & add to cart */}
-            <div className="studio-panel p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span
-                  className="text-sm font-heading uppercase tracking-wider"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Total
-                </span>
-                <span
-                  className="text-2xl font-heading font-bold"
-                  style={{ color: "var(--accent-gold)" }}
-                >
-                  {formatPrice(totalPrice)}
-                </span>
-              </div>
-
-              <button
-                onClick={handleAddToCart}
-                className="btn-primary w-full justify-center"
-                style={{
-                  background: addedToCart ? "#4ade80" : undefined,
-                }}
-              >
-                {addedToCart ? (
-                  <>
-                    <span>¡Agregado al carrito!</span>
-                    <Icon name="CheckIcon" size={16} />
-                  </>
-                ) : (
-                  <>
-                    <span>Agregar al carrito</span>
-                    <Icon name="ShoppingCartIcon" size={16} />
-                  </>
-                )}
+              <button className="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest hover:bg-[var(--accent-gold)] transition-colors flex items-center justify-center gap-2">
+                Confirmar Pedido
+                <Icon name="ArrowRightIcon" size={14} />
               </button>
+            </section>
+          </aside>
 
-              {addedToCart && (
-                <button
-                  onClick={() => router.push("/cart")}
-                  className="btn-secondary w-full justify-center mt-3"
-                >
-                  <span>Ver carrito</span>
-                  <Icon name="ArrowRightIcon" size={16} />
-                </button>
-              )}
+          {/* Right panel — 3D Viewport - El corazón del estudio */}
+          <section className="lg:col-span-8 flex flex-col gap-6">
+            <div className="studio-panel relative aspect-[4/3] lg:aspect-auto lg:h-[700px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-2xl group">
+              {/* Fondo decorativo del Canvas */}
+              <div className="absolute inset-0 opacity-20 pointer-events-none bg-[url('/grid.svg')] bg-center [mask-image:radial-gradient(white,transparent)]" />
 
-              <p
-                className="text-xs text-center mt-3"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Precio por unidad: {formatPrice(BASE_PRICE)} · Envío en 48hs
-              </p>
-            </div>
-          </div>
-
-          {/* Right panel — 3D viewer */}
-          <div className="lg:col-span-8 flex flex-col gap-4">
-            {/* Canvas */}
-            <div
-              className="studio-panel relative overflow-hidden"
-              style={{
-                height: "520px",
-                background:
-                  "radial-gradient(ellipse 60% 60% at 50% 50%, rgba(200,169,110,0.06) 0%, var(--bg-card) 70%)",
-              }}
-            >
-              {/* Canvas */}
+              {/* 3D Canvas Mock/Placeholder */}
               <canvas
                 ref={canvasRef}
-                className="tshirt-canvas"
-                style={{ width: "100%", height: "100%" }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                className="w-full h-full cursor-grab active:cursor-grabbing transition-transform"
               />
 
-              {/* Overlay info */}
-              <div className="absolute top-4 left-4 flex items-center gap-2">
+              {/* HUD del Viewer (Heads-up Display) */}
+              <div className="absolute top-6 left-6 flex items-center gap-3 pointer-events-none">
                 <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: threeReady ? "#4ade80" : "#f97316" }}
-                />
-                <span
-                  className="text-xs font-heading uppercase tracking-widest"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {threeReady ? "Vista 3D activa" : "Cargando 3D…"}
-                </span>
-              </div>
-
-              <div className="absolute top-4 right-4">
-                <span
-                  className="text-xs font-heading uppercase tracking-widest"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Arrastrá para rotar
-                </span>
-              </div>
-
-              {/* Color indicator */}
-              <div
-                className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2"
-                style={{
-                  background: "rgba(10,10,10,0.8)",
-                  border: "1px solid var(--border-subtle)",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                <div
-                  className="w-3 h-3 rounded-full border"
-                  style={{
-                    background: selectedColor.hex,
-                    borderColor: "var(--border-medium)",
-                  }}
-                />
-                <span
-                  className="text-xs font-heading uppercase tracking-wider"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {selectedColor.name}
-                </span>
-              </div>
-
-              {/* Generating overlay */}
-              {isGenerating && (
-                <div
-                  className="absolute inset-0 flex flex-col items-center justify-center z-20"
-                  style={{ background: "rgba(10,10,10,0.7)", backdropFilter: "blur(4px)" }}
+                  className={`px-3 py-1.5  backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all shadow-lg ${threeReady ? "bg-green-500/10" : "bg-orange-500/10"}`}
                 >
                   <div
-                    className="w-16 h-16 flex items-center justify-center mb-4"
-                    style={{
-                      border: "2px solid var(--accent-gold)",
-                      borderRadius: "50%",
-                      animation: "spin-slow 2s linear infinite",
-                    }}
+                    className={`w-1.5 h-1.5  animate-pulse ${threeReady ? "bg-green-400" : "bg-orange-400"}`}
+                  />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">
+                    {threeReady ? "Motor 3D Renderizando" : "Sincronizando..."}
+                  </span>
+                </div>
+              </div>
+
+              {/* Controles flotantes de Cámara */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5  bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                {[
+                  { label: "Frente", y: 0 },
+                  { label: "Lateral", y: Math.PI / 2 },
+                  { label: "Espalda", y: Math.PI },
+                ].map((view) => (
+                  <button
+                    key={view.label}
+                    onClick={() => setRotation({ x: 0, y: view.y })}
+                    className="px-4 py-2 text-[9px] font-bold uppercase tracking-tighter text-white/60 hover:text-white hover:bg-white/10  transition-all"
                   >
-                    <Icon
-                      name="SparklesIcon"
-                      size={28}
-                      variant="solid"
-                      style={{ color: "var(--accent-gold)" } as React.CSSProperties}
-                    />
+                    {view.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* IA Generating Overlay - Más dramático */}
+              {isGenerating && (
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                  <div className="relative mb-6">
+                    <div className="w-20 h-20 border-2 border-[var(--accent-gold)]/20  animate-ping" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Icon
+                        name="SparklesIcon"
+                        size={32}
+                        className="text-[var(--accent-gold)] animate-pulse"
+                        variant="solid"
+                      />
+                    </div>
                   </div>
-                  <p
-                    className="text-sm font-heading font-bold uppercase tracking-widest"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    Generando diseño…
-                  </p>
-                  <p
-                    className="text-xs mt-1"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    La IA está procesando tu prompt
+                  <h3 className="text-lg font-heading font-bold text-white uppercase tracking-[0.3em]">
+                    IA Creativa
+                  </h3>
+                  <p className="text-[var(--text-muted)] text-xs mt-2 font-mono italic">
+                    Tejiendo hilos de datos en arte...
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Rotation preset buttons */}
-            <div className="flex gap-3">
-              {[
-                { label: "Frente", y: 0 },
-                { label: "¾ Izq.", y: -0.6 },
-                { label: "¾ Der.", y: 0.6 },
-                { label: "Perfil", y: Math.PI / 2 },
-              ].map((view) => (
-                <button
-                  key={view.label}
-                  onClick={() => setRotation({ x: 0, y: view.y })}
-                  className="btn-secondary flex-1 justify-center py-2 text-xs"
-                >
-                  {view.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Design info */}
+            {/* Info del diseño generado (si existe) */}
             {generatedDesign && (
-              <div
-                className="p-4 flex items-center gap-4"
-                style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border-gold)",
-                }}
-              >
-                <div
-                  className="w-12 h-12 overflow-hidden flex-shrink-0"
-                  style={{ border: "1px solid var(--border-subtle)" }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="p-6 border border-[var(--border-gold)]/40 bg-gradient-to-r from-[var(--bg-card)] to-transparent flex items-center gap-6 animate-slide-up">
+                <div className="w-20 h-20 overflow-hidden border border-[var(--border-subtle)] shadow-lg bg-black">
                   <img
                     src={generatedDesign}
-                    alt="Diseño generado por IA"
-                    className="w-full h-full object-cover"
+                    alt="Preview"
+                    className="w-full h-full object-cover opacity-80"
                   />
                 </div>
                 <div>
-                  <div
-                    className="text-sm font-heading font-bold mb-1"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {designTitle}
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-heading font-bold text-[var(--text-primary)]">
+                      {designTitle}
+                    </h4>
+                    <div className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[8px] font-bold uppercase">
+                      Diseño Exclusivo
+                    </div>
                   </div>
-                  <div
-                    className="text-xs"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Generado con IA · {selectedColor.name} · Talle {selectedSize}
-                  </div>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed max-w-md">
+                    Este patrón ha sido generado específicamente para tu cuenta.
+                    La resolución es apta para impresión DTG de alta definición.
+                  </p>
                 </div>
-                <div className="ml-auto">
-                  <Icon
-                    name="CheckBadgeIcon"
-                    size={20}
-                    variant="solid"
-                    style={{ color: "#4ade80" } as React.CSSProperties}
-                  />
-                </div>
+                <button className="ml-auto p-3  hover:bg-white/5 text-[var(--text-muted)] transition-colors">
+                  <Icon name="ArrowDownTrayIcon" size={20} />
+                </button>
               </div>
             )}
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
