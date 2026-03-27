@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/AppIcon";
 import dynamic from "next/dynamic";
 import state from "@/store";
+import { toast } from "sonner";
+import { cartItemSchema } from "@/schema/ICartItemSchema";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface CartItem {
@@ -379,9 +381,9 @@ export default function DesignStudioInteractive() {
 
   // ── Add to cart ──────────────────────────────────────────────────────
   const handleAddToCart = () => {
-    const item: CartItem = {
+    // 1. Preparamos el objeto igual que lo tenías
+    const rawItem = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      title: designTitle || "Mi Diseño TeeForge",
       prompt: prompt || "Diseño personalizado",
       color: selectedColor.hex,
       colorName: selectedColor.name,
@@ -390,22 +392,40 @@ export default function DesignStudioInteractive() {
       price: BASE_PRICE,
       designDataUrl: generatedDesign || "",
     };
+    console.log(rawItem, "objeto a mandar al carrito")
+    // 2. Validamos con Zod
+    const result = cartItemSchema.safeParse(rawItem);
 
-    try {
-      const existing = JSON.parse(
-        localStorage.getItem("teeforge-cart") || "[]",
-      ) as CartItem[];
-      existing.push(item);
-      localStorage.setItem("teeforge-cart", JSON.stringify(existing));
-      window.dispatchEvent(new Event("teeforge-cart-update"));
-    } catch {
-      /* ignore */
+    if (!result.success) {
+      // Aquí es donde entra el "Toast" o un alert si prefieres
+      const errorMsg = result.error.issues[0].message;
+      alert(errorMsg); // O toast.error(errorMsg)
+      return;
     }
 
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 3000);
+    // 3. Si es válido, procedemos con tu lógica de localStorage
+    try {
+      const validatedItem = result.data; // Datos limpios y tipados
+      const storageKey = "teeforge-cart";
+
+      const existing = JSON.parse(
+        localStorage.getItem(storageKey) || "[]",
+      ) as CartItem[];
+
+      existing.push(validatedItem);
+      localStorage.setItem(storageKey, JSON.stringify(existing));
+
+      // Notificamos al resto de la app (Header, Carrito flotante, etc.)
+      window.dispatchEvent(new Event("teeforge-cart-update"));
+
+      // Tu feedback visual de éxito
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 3000);
+    } catch (err) {
+      console.error("Error al guardar en el carrito:", err);
+    }
   };
-  console.log("IMAG", generatedDesign);
+
   return (
     <div className="min-h-screen pt-10">
       {/* Page header - Más minimalista y elegante */}
@@ -595,9 +615,13 @@ export default function DesignStudioInteractive() {
                 </div>
               </div>
 
-              <button className="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest hover:bg-[var(--accent-gold)] transition-colors flex items-center justify-center gap-2">
-                Confirmar Pedido
-                <Icon name="ArrowRightIcon" size={14} />
+              <button
+                onClick={handleAddToCart}
+                disabled={isGenerating}
+                className="w-full py-4 bg-white text-black font-bold uppercase text-[10px] tracking-widest hover:bg-[var(--accent-gold)] transition-colors flex items-center justify-center gap-2"
+              >
+                {addedToCart ? "¡AÑADIDO!" : "Añadir al Carrito"}
+                <Icon name={addedToCart ? "CheckIcon" : "ShoppingBagIcon"} size={14} />
               </button>
             </section>
           </aside>

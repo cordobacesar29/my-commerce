@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { FirebaseError } from "firebase/app";
+import { syncUserRecord } from "@/lib/user-sevice";
 
 export const UserHeaderSection = () => {
   const { user } = useAuth();
@@ -18,9 +19,11 @@ export const UserHeaderSection = () => {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
+
+      await syncUserRecord(result.user);
       const idToken = await result.user.getIdToken();
 
-      await fetch("/api/auth/google-login", {
+      await fetch("/api/auth/session", {
         method: "POST",
         body: JSON.stringify({ idToken }),
         headers: { "Content-Type": "application/json" },
@@ -60,6 +63,7 @@ export const UserHeaderSection = () => {
             src={user.photoURL}
             alt="Avatar"
             className="h-8 w-8 rounded-full object-cover border border-white/10 group-hover:border-[#C8A96E] transition-colors"
+            referrerPolicy="no-referrer"
           />
         ) : (
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C8A96E] text-black font-bold text-xs">
@@ -92,7 +96,6 @@ export const UserHeaderSection = () => {
         <>
           {/* Overlay invisible para cerrar al hacer click afuera */}
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-
           <div className="absolute top-full right-0 mt-2 w-48 z-20 overflow-hidden rounded-md bg-[#1A1A1A] border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="p-3 border-b border-white/5">
               <p className="text-[10px] text-gray-500 uppercase tracking-tighter mb-1">
