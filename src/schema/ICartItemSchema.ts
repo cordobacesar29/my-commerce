@@ -14,4 +14,4 @@ export const cartItemSchema = z.object({
   designDataUrl: z.string().url("Debes generar un diseño con IA primero"),
 });
 
-type CartItem = z.infer<typeof cartItemSchema>;
+export type CartItem = z.infer<typeof cartItemSchema>;
