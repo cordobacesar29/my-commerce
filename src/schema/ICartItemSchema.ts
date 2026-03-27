@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const cartItemSchema = z.object({
   id: z.string(),
-  title: z.string().min(1, "El título es requerido"),
   prompt: z.string().min(3, "Describe un poco más tu idea antes de comprar"),
   color: z.string().startsWith("#"),
   colorName: z.string(),
