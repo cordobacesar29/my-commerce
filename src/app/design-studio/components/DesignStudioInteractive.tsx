@@ -11,7 +11,6 @@ import { cartItemSchema } from "@/schema/ICartItemSchema";
 // ── Types ──────────────────────────────────────────────────────────────────
 interface CartItem {
   id: string;
-  title: string;
   prompt: string;
   color: string;
   colorName: string;
@@ -35,9 +34,6 @@ const BASE_PRICE = 4500;
 
 // ── Main Component ──────────────────────────────────────────────────────────
 export default function DesignStudioInteractive() {
-  const router = useRouter();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animFrameRef = useRef<number>(0);
   const threeRef = useRef<{
     renderer: import("three").WebGLRenderer;
     scene: import("three").Scene;
@@ -55,10 +51,6 @@ export default function DesignStudioInteractive() {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [designTitle, setDesignTitle] = useState("Mi Diseño");
-  const [threeReady, setThreeReady] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 });
-  const [rotation, setRotation] = useState({ x: 0, y: 0.3 });
   const [activeLogoPosition, setActiveLogoPosition] = useState("front_center");
   const totalPrice = BASE_PRICE * quantity;
 
@@ -68,230 +60,6 @@ export default function DesignStudioInteractive() {
       currency: "ARS",
       minimumFractionDigits: 0,
     }).format(p);
-
-  // ── Three.js init ──────────────────────────────────────────────────────
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    let cleanup: (() => void) | null = null;
-
-    const init = async () => {
-      try {
-        const THREE = await import("three");
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(
-          40,
-          canvas.clientWidth / canvas.clientHeight,
-          0.1,
-          100,
-        );
-        camera.position.set(0, 0, 4.5);
-
-        const renderer = new THREE.WebGLRenderer({
-          canvas,
-          antialias: true,
-          alpha: true,
-        });
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor(0x000000, 0);
-        renderer.shadowMap.enabled = true;
-
-        // Lighting
-        const ambient = new THREE.AmbientLight(0xfff8f0, 0.7);
-        scene.add(ambient);
-
-        const key = new THREE.DirectionalLight(0xfff8f0, 1.4);
-        key.position.set(3, 4, 5);
-        scene.add(key);
-
-        const rim = new THREE.DirectionalLight(0xc8a96e, 1.0);
-        rim.position.set(-4, 1, -3);
-        scene.add(rim);
-
-        const fill = new THREE.DirectionalLight(0x8090ff, 0.4);
-        fill.position.set(0, -3, 2);
-        scene.add(fill);
-
-        // T-shirt group
-        const tshirtGroup = new THREE.Group();
-        scene.add(tshirtGroup);
-
-        const fabricColor = new THREE.Color(selectedColor.hex);
-        const bodyMat = new THREE.MeshStandardMaterial({
-          color: fabricColor,
-          roughness: 0.88,
-          metalness: 0.02,
-        });
-
-        // Body
-        const bodyGeo = new THREE.BoxGeometry(1.5, 1.8, 0.1, 10, 12, 2);
-        const bp = bodyGeo.attributes.position;
-        for (let i = 0; i < bp.count; i++) {
-          const x = bp.getX(i);
-          const y = bp.getY(i);
-          if (y > 0.5) bp.setX(i, x * (1 - (y - 0.5) * 0.25));
-          if (y < -0.6) {
-            const t = (-0.6 - y) / 0.3;
-            bp.setY(i, y + t * t * 0.04);
-          }
-        }
-        bodyGeo.computeVertexNormals();
-        const body = new THREE.Mesh(bodyGeo, bodyMat);
-        tshirtGroup.add(body);
-
-        // Sleeves
-        const makeSleeveGeo = () => {
-          const g = new THREE.BoxGeometry(0.6, 0.5, 0.09, 5, 5, 1);
-          const p = g.attributes.position;
-          for (let i = 0; i < p.count; i++) {
-            const x = p.getX(i);
-            const y = p.getY(i);
-            p.setY(i, y - Math.abs(x) * 0.18);
-          }
-          g.computeVertexNormals();
-          return g;
-        };
-
-        const sleeveL = new THREE.Mesh(makeSleeveGeo(), bodyMat);
-        sleeveL.position.set(-1.05, 0.72, 0);
-        sleeveL.rotation.z = 0.3;
-        tshirtGroup.add(sleeveL);
-
-        const sleeveR = new THREE.Mesh(makeSleeveGeo(), bodyMat);
-        sleeveR.position.set(1.05, 0.72, 0);
-        sleeveR.rotation.z = -0.3;
-        tshirtGroup.add(sleeveR);
-
-        // Collar
-        const collarMat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(selectedColor.hex).multiplyScalar(0.7),
-          roughness: 0.95,
-        });
-        const collarGeo = new THREE.TorusGeometry(0.24, 0.045, 8, 28, Math.PI);
-        const collar = new THREE.Mesh(collarGeo, collarMat);
-        collar.position.set(0, 0.9, 0.01);
-        collar.rotation.z = Math.PI;
-        tshirtGroup.add(collar);
-
-        // Design plane
-        const designGeo = new THREE.PlaneGeometry(0.9, 0.9);
-        const designCanvas = document.createElement("canvas");
-        designCanvas.width = 512;
-        designCanvas.height = 512;
-        drawDefaultDesign(designCanvas);
-        const designTex = new THREE.CanvasTexture(designCanvas);
-        const designMat = new THREE.MeshBasicMaterial({
-          map: designTex,
-          transparent: true,
-          depthWrite: false,
-        });
-        const designMesh = new THREE.Mesh(designGeo, designMat);
-        designMesh.position.set(0, 0.2, 0.052);
-        tshirtGroup.add(designMesh);
-
-        threeRef.current = {
-          renderer,
-          scene,
-          camera,
-          tshirtGroup,
-          designMesh,
-          bodyMat,
-        };
-
-        setThreeReady(true);
-
-        // Animate loop
-        const animate = () => {
-          animFrameRef.current = requestAnimationFrame(animate);
-          renderer.render(scene, camera);
-        };
-        animate();
-
-        // Resize
-        const onResize = () => {
-          if (!canvas || !threeRef.current) return;
-          threeRef.current.camera.aspect =
-            canvas.clientWidth / canvas.clientHeight;
-          threeRef.current.camera.updateProjectionMatrix();
-          threeRef.current.renderer.setSize(
-            canvas.clientWidth,
-            canvas.clientHeight,
-          );
-        };
-        window.addEventListener("resize", onResize);
-
-        cleanup = () => {
-          window.removeEventListener("resize", onResize);
-          renderer.dispose();
-        };
-      } catch (err) {
-        console.error("Three.js studio init error:", err);
-      }
-    };
-
-    init();
-
-    return () => {
-      cancelAnimationFrame(animFrameRef.current);
-      cleanup && cleanup();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Update shirt color ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (!threeRef.current) return;
-    import("three").then((THREE) => {
-      if (!threeRef.current) return;
-      threeRef.current.bodyMat.color = new THREE.Color(selectedColor.hex);
-    });
-  }, [selectedColor]);
-
-  // ── Update rotation ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (!threeRef.current) return;
-    threeRef.current.tshirtGroup.rotation.y = rotation.y;
-    threeRef.current.tshirtGroup.rotation.x = rotation.x;
-  }, [rotation]);
-
-  // ── Draw default design ──────────────────────────────────────────────
-  const drawDefaultDesign = (canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext("2d")!;
-    ctx.clearRect(0, 0, 512, 512);
-
-    const grad = ctx.createRadialGradient(256, 220, 0, 256, 220, 200);
-    grad.addColorStop(0, "rgba(200,169,110,0.8)");
-    grad.addColorStop(0.6, "rgba(160,120,64,0.4)");
-    grad.addColorStop(1, "rgba(200,169,110,0)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 512, 512);
-
-    // Star
-    ctx.strokeStyle = "rgba(226,201,138,0.9)";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
-      const r = i % 2 === 0 ? 130 : 60;
-      const x = 256 + r * Math.cos(angle);
-      const y = 220 + r * Math.sin(angle);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    ctx.font = "bold 48px sans-serif";
-    ctx.fillStyle = "rgba(226,201,138,0.9)";
-    ctx.textAlign = "center";
-    ctx.fillText("TeeForge", 256, 390);
-
-    ctx.font = "24px sans-serif";
-    ctx.fillStyle = "rgba(200,169,110,0.5)";
-    ctx.fillText("Describí tu diseño →", 256, 440);
-  };
 
   // ── Update design texture ──────────────────────────────────────────────
   const updateDesignTexture = useCallback(async (imageUrl: string) => {
@@ -337,14 +105,6 @@ export default function DesignStudioInteractive() {
     setIsGenerating(true);
     setDesignTitle(prompt.slice(0, 30) + (prompt.length > 30 ? "…" : ""));
 
-    // ⚠️ TODO: Connect to DALL-E API (OpenAI)
-    // const response = await fetch('/api/generate-design', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ prompt }),
-    //   headers: { 'Content-Type': 'application/json' }
-    // });
-    // const { imageUrl } = await response.json();
-
     // Mock: simulate AI generation delay
     await new Promise((r) => setTimeout(r, 2800));
 
@@ -360,23 +120,6 @@ export default function DesignStudioInteractive() {
     setGeneratedDesign(mockUrl);
     await updateDesignTexture(mockUrl);
     setIsGenerating(false);
-  };
-
-  // ── Drag to rotate ──────────────────────────────────────────────────
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setLastMouse({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const dx = e.clientX - lastMouse.x;
-    const dy = e.clientY - lastMouse.y;
-    setRotation((r) => ({
-      y: r.y + dx * 0.01,
-      x: Math.max(-0.5, Math.min(0.5, r.x + dy * 0.005)),
-    }));
-    setLastMouse({ x: e.clientX, y: e.clientY });
   };
 
   // ── Add to cart ──────────────────────────────────────────────────────
@@ -395,7 +138,7 @@ export default function DesignStudioInteractive() {
     console.log(rawItem, "objeto a mandar al carrito")
     // 2. Validamos con Zod
     const result = cartItemSchema.safeParse(rawItem);
-
+    console.log(result, "result")
     if (!result.success) {
       // Aquí es donde entra el "Toast" o un alert si prefieres
       const errorMsg = result.error.issues[0].message;
@@ -477,19 +220,12 @@ export default function DesignStudioInteractive() {
                   </span>
                 </div>
 
-                <div className="relative group">
                   <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Describí tu idea artística..."
                     className="resize-none w-full bg-[var(--bg-elevated)] border border-[#C8A96E] p-4 text-sm text-[var(--text-primary)] focus:border-[var(--accent-gold)] focus:ring-1 focus:ring-[var(--accent-gold)] transition-all outline-none min-h-[120px]  placeholder:text-[var(--text-muted)]/50 shadow-inner"
                   />
-                  <div className="absolute bottom-3 right-3 opacity-0 group-focus-within:opacity-100 transition-opacity">
-                    <kbd className="text-[10px] bg-[var(--bg-primary)] px-2 py-1  border border-[#C8A96E] text-[var(--text-muted)]">
-                      Enter para generar
-                    </kbd>
-                  </div>
-                </div>
 
                 {/* Sugerencias Estilizadas */}
                 <div className="space-y-2">
