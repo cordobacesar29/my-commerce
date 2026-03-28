@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { FieldValue, Timestamp } from "firebase/firestore";
+import { LogoPosition } from "./ICartItemSchema";
 
 // 1. Esquema de Validación con Zod (Para el Formulario y la API)
 export const OrderItemSchema = z.object({
@@ -10,6 +11,7 @@ export const OrderItemSchema = z.object({
   quantity: z.number().min(1, "Mínimo 1 unidad"),
   priceUnit: z.number().positive(),
   designUrl: z.string().url("URL de diseño inválida").or(z.string().startsWith("data:image")),
+  position: z.enum(LogoPosition)
 });
 
 export const ShippingSchema = z.object({
