@@ -15,11 +15,22 @@ export const OrderItemSchema = z.object({
 });
 
 export const ShippingSchema = z.object({
+  // --- Datos de Envío y Contacto ---
   fullName: z.string().min(3, "El nombre es muy corto"),
+  email: z.string().email("Email inválido"),
+  phone: z.string().min(8, "Teléfono inválido"),
   address: z.string().min(5, "La dirección es obligatoria"),
   city: z.string().min(2, "Ciudad obligatoria"),
+  province: z.string().min(2, "Provincia obligatoria"),
   zipCode: z.string().min(4, "Código postal inválido"),
-  phone: z.string().min(8, "Teléfono inválido"),
+
+  // --- Datos de Pago (Simulados/Frontend) ---
+  // Nota: En una app real, estos datos suelen ir directo a Stripe/MercadoPago
+  // y no se guardan en tu base de datos por seguridad (PCI Compliance).
+  cardNumber: z.string().regex(/^\d{16}$/, "Número de tarjeta inválido (16 dígitos)"),
+  cardExpiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Formato MM/YY inválido"),
+  cardCvv: z.string().min(3, "CVV inválido").max(4),
+  cardName: z.string().min(3, "Nombre en tarjeta obligatorio"),
 });
 
 export const CreateOrderSchema = z.object({
