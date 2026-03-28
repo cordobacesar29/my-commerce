@@ -8,6 +8,7 @@ import {
   cartItemSchema,
   CartItem,
   LogoPosition,
+  ShirtSize,
 } from "@/schema/ICartItemSchema";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -18,7 +19,7 @@ const SHIRT_COLORS = [
   { hex: "#F5F0E8", name: "Blanco" },
 ];
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const SIZES= ["XS", "S", "M", "L", "XL", "XXL"];
 
 const AI_PROMPTS = ["Lobo geométrico low-poly con luna llena dorada"];
 
@@ -29,7 +30,7 @@ export default function DesignStudioInteractive() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDesign, setGeneratedDesign] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState(SHIRT_COLORS[2]);
-  const [selectedSize, setSelectedSize] = useState("M");
+  const [selectedSize, setSelectedSize] = useState<ShirtSize>(ShirtSize.M);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [designTitle, setDesignTitle] = useState("Mi Diseño");
@@ -320,7 +321,7 @@ export default function DesignStudioInteractive() {
                   {SIZES.map((s) => (
                     <button
                       key={s}
-                      onClick={() => setSelectedSize(s)}
+                      onClick={() => setSelectedSize(s as ShirtSize)}
                       className={`py-3 text-[10px] font-bold transition-all ${
                         selectedSize === s
                           ? "bg-[var(--accent-gold)] text-[var(--bg-primary)]"

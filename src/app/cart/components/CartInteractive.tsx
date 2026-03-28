@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { CartItem } from "@/schema/ICartItemSchema";
-import { ShippingData } from "@/schema/IOrderSchema";
+import { Order, OrderItem, ShippingData } from "@/schema/IOrderSchema";
 import { toast } from "sonner";
 import { CartHeader } from "./CartHeader";
 import { CartStep } from "./CartStep";
 import { CheckoutStep } from "./CheckoutStep";
 import { SuccessStep } from "./SuccessStep";
+import { useAuth } from "@/context/AuthContext";
 
 const EMPTY_FORM: ShippingData = {
   fullName: "",
@@ -29,7 +30,7 @@ export default function CartInteractive() {
   const [step, setStep] = useState<"cart" | "checkout" | "success">("cart");
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<Partial<ShippingData>>({});
-
+  const { user } = useAuth();
   // Load cart from localStorage
   useEffect(() => {
     const load = () => {
@@ -115,8 +116,11 @@ export default function CartInteractive() {
   // Handle checkout submission
   const handleCheckout = async () => {
     if (!validateForm()) return;
+    if (!user) {
+      toast.error("Debes iniciar sesión para realizar la compra");
+      return;
+    }
     setIsProcessing(true);
-
     // ⚠️ TODO: Connect to Mercado Pago API
     // const response = await fetch('/api/create-payment', {
     //   method: 'POST',
@@ -127,12 +131,53 @@ export default function CartInteractive() {
     // window.location.href = init_point;
 
     // Simulate payment processing
-    await new Promise((r) => setTimeout(r, 2500));
 
-    localStorage.removeItem("teeforge-cart");
-    window.dispatchEvent(new Event("teeforge-cart-update"));
-    setIsProcessing(false);
-    setStep("success");
+    try {
+      const orderPayload: Order = {
+        userId: user.uid,
+        items: items.map((item) => ({
+          id: item.id,
+          designUrl: item.designUrl,
+          colorName: item.colorName,
+          colorHex: item.colorHex,
+          size: item.size,
+          quantity: item.quantity,
+          priceUnit: item.priceUnit,
+          position: item.position,
+        })),
+        shipping: {
+          fullName: form.fullName,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+          city: form.city,
+          province: form.province,
+          zipCode: form.zipCode,
+        },
+        total,
+        createdAt: new Date(),
+        status: "paid",
+      };
+
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al crear la orden");
+      }
+
+      localStorage.removeItem("teeforge-cart");
+      globalThis.dispatchEvent(new Event("teeforge-cart-update"));
+      setIsProcessing(false);
+      setStep("success");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // Update form field

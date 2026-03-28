@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     const validation = CreateOrderSchema.safeParse(body);
 
     if (!validation.success) {
+      console.log("❌ ZOD ERROR:", validation.error.format());
       return NextResponse.json({
         error: "Datos de orden inválidos",
         details: validation.error.format() 
@@ -22,9 +23,10 @@ export async function POST(req: NextRequest) {
     // 2. Usamos una Transacción para asegurar que ambas operaciones ocurran
     // Si falla el update del usuario, no se crea la orden.
     const orderId = await adminDb.runTransaction(async (transaction) => {
-      const orderRef = adminDb.collection("orders").doc(); // Genera ID automático
       const userRef = adminDb.collection("users").doc(orderData.userId);
-
+      const orderRef = adminDb.collection("orders").doc(); // Genera ID automático
+      
+      console.log("Intentando actualizar usuario:", orderData.userId);
       // A. Crear la orden en la colección 'orders'
       transaction.set(orderRef, {
         ...orderData,
@@ -49,7 +51,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err: any) {
-    console.error("Error al procesar el checkout (Admin):", err);
+   console.error("DETALLE DEL ERROR EN SERVIDOR:", err);
     
     // Si el error es "5 NOT_FOUND", es porque el userId no existe en la colección 'users'
     return NextResponse.json(
