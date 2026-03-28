@@ -1,24 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Icon from "@/components/ui/AppIcon";
 import dynamic from "next/dynamic";
 import state from "@/store";
+import { cartItemSchema, CartItem, LogoPosition } from "@/schema/ICartItemSchema";
 import { toast } from "sonner";
-import { cartItemSchema } from "@/schema/ICartItemSchema";
+import { useAuth } from "@/context/AuthContext";
 
-// ── Types ──────────────────────────────────────────────────────────────────
-interface CartItem {
-  id: string;
-  prompt: string;
-  color: string;
-  colorName: string;
-  size: string;
-  quantity: number;
-  price: number;
-  designDataUrl: string;
-}
 
 const SHIRT_COLORS = [
   { hex: "#000000", name: "Negro" },
@@ -34,15 +23,6 @@ const BASE_PRICE = 4500;
 
 // ── Main Component ──────────────────────────────────────────────────────────
 export default function DesignStudioInteractive() {
-  const threeRef = useRef<{
-    renderer: import("three").WebGLRenderer;
-    scene: import("three").Scene;
-    camera: import("three").PerspectiveCamera;
-    tshirtGroup: import("three").Group;
-    designMesh: import("three").Mesh;
-    bodyMat: import("three").MeshStandardMaterial;
-  } | null>(null);
-
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDesign, setGeneratedDesign] = useState<string | null>(null);
@@ -51,8 +31,10 @@ export default function DesignStudioInteractive() {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [designTitle, setDesignTitle] = useState("Mi Diseño");
-  const [activeLogoPosition, setActiveLogoPosition] = useState("front_center");
+  const [activeLogoPosition, setActiveLogoPosition] = useState<LogoPosition>(LogoPosition.FrontCenter);
   const totalPrice = BASE_PRICE * quantity;
+  
+  const {user} = useAuth();
 
   const formatPrice = (p: number) =>
     new Intl.NumberFormat("es-AR", {
@@ -60,44 +42,6 @@ export default function DesignStudioInteractive() {
       currency: "ARS",
       minimumFractionDigits: 0,
     }).format(p);
-
-  // ── Update design texture ──────────────────────────────────────────────
-  const updateDesignTexture = useCallback(async (imageUrl: string) => {
-    if (!threeRef.current) return;
-    const THREE = await import("three");
-    const designCanvas = document.createElement("canvas");
-    designCanvas.width = 512;
-    designCanvas.height = 512;
-    const ctx = designCanvas.getContext("2d")!;
-
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      ctx.clearRect(0, 0, 512, 512);
-      ctx.drawImage(img, 56, 56, 400, 400);
-      const tex = new THREE.CanvasTexture(designCanvas);
-      const mat = threeRef.current!.designMesh
-        .material as import("three").MeshBasicMaterial;
-      mat.map = tex;
-      mat.needsUpdate = true;
-    };
-    img.onerror = () => {
-      // Fallback: draw gradient design
-      const grad = ctx.createLinearGradient(0, 0, 512, 512);
-      grad.addColorStop(0, "rgba(200,169,110,0.9)");
-      grad.addColorStop(1, "rgba(139,158,255,0.9)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(256, 256, 200, 0, Math.PI * 2);
-      ctx.fill();
-      const tex = new THREE.CanvasTexture(designCanvas);
-      const mat = threeRef.current!.designMesh
-        .material as import("three").MeshBasicMaterial;
-      mat.map = tex;
-      mat.needsUpdate = true;
-    };
-    img.src = imageUrl;
-  }, []);
 
   // ── AI Generate ──────────────────────────────────────────────────────
   const handleGenerate = async () => {
@@ -118,35 +62,34 @@ export default function DesignStudioInteractive() {
     const mockUrl = mockImages[Math.floor(Math.random() * mockImages.length)];
 
     setGeneratedDesign(mockUrl);
-    await updateDesignTexture(mockUrl);
     setIsGenerating(false);
   };
 
   // ── Add to cart ──────────────────────────────────────────────────────
   const handleAddToCart = () => {
     // 1. Preparamos el objeto igual que lo tenías
-    const rawItem = {
+    const rawItem: CartItem = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       prompt: prompt || "Diseño personalizado",
-      color: selectedColor.hex,
+      colorHex: selectedColor.hex,
       colorName: selectedColor.name,
       size: selectedSize,
       quantity,
-      price: BASE_PRICE,
-      designDataUrl: generatedDesign || "",
+      priceUnit: BASE_PRICE,
+      designUrl: generatedDesign || "",
+      position: activeLogoPosition
     };
-    console.log(rawItem, "objeto a mandar al carrito")
+
     // 2. Validamos con Zod
     const result = cartItemSchema.safeParse(rawItem);
-    console.log(result, "result")
     if (!result.success) {
       // Aquí es donde entra el "Toast" o un alert si prefieres
       const errorMsg = result.error.issues[0].message;
-      alert(errorMsg); // O toast.error(errorMsg)
+      toast.error(errorMsg); // O toast.error(errorMsg)
       return;
     }
 
-    // 3. Si es válido, procedemos con tu lógica de localStorage
+    // 3. Si es válido, procedemos con la lógica de localStorage
     try {
       const validatedItem = result.data; // Datos limpios y tipados
       const storageKey = "teeforge-cart";
@@ -159,11 +102,12 @@ export default function DesignStudioInteractive() {
       localStorage.setItem(storageKey, JSON.stringify(existing));
 
       // Notificamos al resto de la app (Header, Carrito flotante, etc.)
-      window.dispatchEvent(new Event("teeforge-cart-update"));
-
+      globalThis.dispatchEvent(new Event("teeforge-cart-update"));
+      
       // Tu feedback visual de éxito
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 3000);
+      toast.success("Tu diseño se agregó al carrito")
     } catch (err) {
       console.error("Error al guardar en el carrito:", err);
     }
@@ -181,17 +125,17 @@ export default function DesignStudioInteractive() {
           }}
         />
         <div className="relative z-10 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1  bg-[var(--accent-gold)]/10 border border-[var(--accent-gold)]/20 text-[var(--accent-gold)] text-[10px] uppercase tracking-[0.2em] font-bold mb-6 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-3 py-1  bg-(--accent-gold)/10 border border-(--accent-gold)/20 text-(--accent-gold) text-[10px] uppercase tracking-[0.2em] font-bold mb-6 animate-fade-in">
             <Icon name="SparklesIcon" size={12} variant="solid" />
             IA Creative Studio
           </div>
-          <h1 className="text-4xl md:text-5xl font-heading font-bold tracking-tight text-[var(--text-primary)] mb-4">
+          <h1 className="text-4xl md:text-5xl font-heading font-bold tracking-tight text-foreground mb-4">
             Diseñá tu remera <br />
             <span className="text-gradient-gold">
               con Inteligencia Artificial
             </span>
           </h1>
-          <p className="text-[var(--text-muted)] text-sm max-w-lg mx-auto leading-relaxed">
+          <p className="text-(--text-muted) text-sm max-w-lg mx-auto leading-relaxed">
             Transformá tus ideas en prendas únicas. Nuestra IA genera diseños
             exclusivos listos para estampar en calidad premium.
           </p>
@@ -199,7 +143,7 @@ export default function DesignStudioInteractive() {
       </header>
 
       {/* Main studio layout */}
-      <main className="max-w-[1400px] mx-auto px-6 py-12">
+      <main className="max-w-350 mx-auto px-6 py-12">
         <div className="grid lg:grid-cols-12 gap-10 items-start">
           {/* Left panel — Controls (Scrollable en desktop si es necesario) */}
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
@@ -208,14 +152,14 @@ export default function DesignStudioInteractive() {
               <div className="p-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-[var(--accent-gold)]/10 text-[var(--accent-gold)]">
+                    <div className="p-2 bg-(--accent-gold)/10 text-(--accent-gold)">
                       <Icon name="SparklesIcon" size={18} variant="solid" />
                     </div>
-                    <h2 className="text-xs font-bold uppercase tracking-widest text-[var(--text-primary)]">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">
                       Concepto Visual
                     </h2>
                   </div>
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                  <span className="text-[10px] text-(--text-muted) font-mono">
                     STEP 01
                   </span>
                 </div>
@@ -388,10 +332,10 @@ export default function DesignStudioInteractive() {
                 ].map((pos) => (
                   <button
                     key={pos.id}
-                    onClick={() => setActiveLogoPosition(pos.id)}
+                    onClick={() => setActiveLogoPosition(pos.id as LogoPosition)}
                     className={`px-4 py-2 text-[9px] font-bold uppercase tracking-tighter transition-all ${
                       activeLogoPosition === pos.id
-                        ? "text-[var(--accent-gold)] bg-white/10" // ESTILO: Activo (usando la variable de oro)
+                        ? "text-(--accent-gold) bg-white/10" // ESTILO: Activo (usando la variable de oro)
                         : "text-white/60 hover:text-white hover:bg-white/5" // ESTILO: Normal
                     }`}
                   >
