@@ -183,7 +183,6 @@ export default function HeroSection() {
               {[
                 { num: "12.4K+", label: "Diseños creados" },
                 { num: "98%", label: "Satisfacción" },
-                { num: "48hs", label: "Envío express" },
               ].map(({ num, label }) => (
                 <motion.div key={label} variants={fadeUp}>
                   <div
