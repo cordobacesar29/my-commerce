@@ -261,7 +261,7 @@ const cartItem = {
   size: "M" | "L" | "XL"   // Talle seleccionado
   quantity: number,         // Cantidad
   price: number,            // Base: 4.500 ARS
-  designDataUrl: string     // URL de imagen generada
+  designUrl: string     // URL de imagen generada
 };
 
 // Validación con Zod antes de guardar
