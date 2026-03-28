@@ -6,7 +6,7 @@ import Shirt from "./Shirt";
 import { Suspense } from "react";
 
 export default function CanvasModel({
-  customLogo = null,
+  customLogo = "",
   autoRotate = false,
   logoPosition = "front_center",
 }) {
