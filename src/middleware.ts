@@ -1,31 +1,36 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
+  // 1. Obtener el token de las cookies
   const session = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  // 1. Definimos todas las rutas que requieren login
+  // 2. Definir rutas protegidas
   const protectedRoutes = ["/design-studio", "/cart"];
-
-  // 2. Verificamos si la ruta actual empieza con alguna de las protegidas
+  
   const isProtectedRoute = protectedRoutes.some((route) => 
     pathname.startsWith(route)
   );
 
-  // 3. Si es protegida y no hay sesión, redirigimos
+  // 3. Lógica de redirección
   if (isProtectedRoute && !session) {
-    // Es buena práctica guardar la URL a la que intentaba ir para volver después del login
-    const loginUrl = new URL("/", request.url);
-    return NextResponse.redirect(loginUrl);
+    // Clonamos la URL base y cambiamos el path al Home
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    // Limpiamos los parámetros para evitar loops infinitos
+    url.search = ""; 
+    
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
-// 4. Actualizamos el matcher para que el middleware se ejecute en estas rutas
+// 4. Matcher optimizado
 export const config = {
   matcher: [
     "/design-studio/:path*",
-    "/cart/:path*"
+    "/cart/:path*",
   ],
 };
