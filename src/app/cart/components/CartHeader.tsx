@@ -2,7 +2,7 @@
 
 import Icon from "@/components/ui/AppIcon";
 
-type StepKey = "cart" | "checkout" | "success";
+type StepKey = "cart" | "checkout" | "payment_processing" | "success" | "failure" | "pending";
 
 interface CartHeaderProps {
   currentStep: StepKey;
@@ -15,11 +15,14 @@ const STEP_LIST = [
 ];
 
 export const CartHeader = ({ currentStep }: CartHeaderProps) => {
-  const stepIndex = STEP_LIST.findIndex((s) => s.key === currentStep);
+  // Mapear payment_processing al index del checkout para el indicador
+  const displayStep = currentStep === "payment_processing" ? "checkout" : currentStep;
+  const stepIndex = STEP_LIST.findIndex((s) => s.key === displayStep);
 
   const getTitle = () => {
     switch (currentStep) {
       case "checkout":
+      case "payment_processing":
         return (
           <>
             Completá
@@ -40,6 +43,8 @@ export const CartHeader = ({ currentStep }: CartHeaderProps) => {
 
   const getTag = () => {
     switch (currentStep) {
+      case "payment_processing":
+        return "Procesando pago";
       case "checkout":
         return "Checkout";
       default:
@@ -65,7 +70,7 @@ export const CartHeader = ({ currentStep }: CartHeaderProps) => {
           >
             <Icon
               name={
-                currentStep === "checkout"
+                currentStep === "checkout" || currentStep === "payment_processing"
                   ? "CreditCardIcon"
                   : "ShoppingCartIcon"
               }

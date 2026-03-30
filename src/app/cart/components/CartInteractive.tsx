@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { CartItem } from "@/schema/ICartItemSchema";
-import { Order, OrderItem, ShippingData } from "@/schema/IOrderSchema";
+import { Order, ShippingData } from "@/schema/IOrderSchema";
 import { toast } from "sonner";
 import { CartHeader } from "./CartHeader";
 import { CartStep } from "./CartStep";
 import { CheckoutStep } from "./CheckoutStep";
 import { SuccessStep } from "./SuccessStep";
+import { FailureStep } from "./FailureStep";
+import { PendingStep } from "./PendingStep";
 import { useAuth } from "@/context/AuthContext";
+
+export type StepKey = "cart" | "checkout" | "payment_processing" | "success" | "failure" | "pending";
 
 const EMPTY_FORM: ShippingData = {
   fullName: "",
@@ -27,10 +31,11 @@ const EMPTY_FORM: ShippingData = {
 export default function CartInteractive() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [form, setForm] = useState<ShippingData>(EMPTY_FORM);
-  const [step, setStep] = useState<"cart" | "checkout" | "success">("cart");
+  const [step, setStep] = useState<StepKey>("cart");
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<Partial<ShippingData>>({});
   const { user } = useAuth();
+
   // Load cart from localStorage
   useEffect(() => {
     const load = () => {
@@ -46,6 +51,23 @@ export default function CartInteractive() {
     load();
     globalThis.addEventListener("teeforge-cart-update", load);
     return () => globalThis.removeEventListener("teeforge-cart-update", load);
+  }, []);
+
+  // Load step from URL params (para regresar de MP)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status");
+    
+    if (status === "success") {
+      setStep("success");
+      window.history.replaceState({}, document.title, "/cart");
+    } else if (status === "failure") {
+      setStep("failure");
+      window.history.replaceState({}, document.title, "/cart");
+    } else if (status === "pending") {
+      setStep("pending");
+      window.history.replaceState({}, document.title, "/cart");
+    }
   }, []);
 
   // Format price
@@ -120,19 +142,14 @@ export default function CartInteractive() {
       toast.error("Debes iniciar sesión para realizar la compra");
       return;
     }
-    setIsProcessing(true);
-    // ⚠️ TODO: Connect to Mercado Pago API
-    // const response = await fetch('/api/create-payment', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ items, total, buyer: form }),
-    //   headers: { 'Content-Type': 'application/json' }
-    // });
-    // const { init_point } = await response.json();
-    // window.location.href = init_point;
 
-    // Simulate payment processing
+    setIsProcessing(true);
+    setStep("payment_processing");
 
     try {
+      // TODO: Conectar con Mercado Pago aquí
+      // Por ahora simulamos el flujo
+      
       const orderPayload: Order = {
         userId: user.uid,
         items: items.map((item) => ({
@@ -156,28 +173,44 @@ export default function CartInteractive() {
         },
         total,
         createdAt: new Date(),
-        status: "paid",
+        status: "pending_payment",
       };
 
-      const response = await fetch("/api/checkout", {
+      // Crear orden en Firestore primero
+      const orderResponse = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload),
       });
 
-      const result = await response.json();
+      const orderResult = await orderResponse.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Error al crear la orden");
+      if (!orderResponse.ok) {
+        throw new Error(orderResult.error || "Error al crear la orden");
       }
 
-      localStorage.removeItem("teeforge-cart");
-      globalThis.dispatchEvent(new Event("teeforge-cart-update"));
-      setIsProcessing(false);
-      setStep("success");
+      // Aquí iría la redirección a Mercado Pago
+      // window.location.href = mpData.init_point;
+      
+      // Por ahora, simulamos éxito
+      setTimeout(() => {
+        localStorage.removeItem("teeforge-cart");
+        globalThis.dispatchEvent(new Event("teeforge-cart-update"));
+        setIsProcessing(false);
+        setStep("success");
+      }, 2000);
+
     } catch (error) {
-      console.log(error);
+      console.error("Error en checkout:", error);
+      toast.error("Error al procesar el pago");
+      setIsProcessing(false);
+      setStep("failure");
     }
+  };
+
+  // Retry payment (va de failure -> checkout)
+  const handleRetryPayment = () => {
+    setStep("checkout");
   };
 
   // Update form field
@@ -199,7 +232,7 @@ export default function CartInteractive() {
     return digits;
   };
 
-  // Render success step
+  // Render based on step
   if (step === "success") {
     return (
       <SuccessStep
@@ -213,9 +246,36 @@ export default function CartInteractive() {
     );
   }
 
+  if (step === "failure") {
+    return (
+      <FailureStep
+        items={items}
+        form={form}
+        total={total}
+        subtotal={subtotal}
+        shipping={shipping}
+        formatPrice={formatPrice}
+        onRetryPayment={handleRetryPayment}
+      />
+    );
+  }
+
+  if (step === "pending") {
+    return (
+      <PendingStep
+        items={items}
+        form={form}
+        total={total}
+        subtotal={subtotal}
+        shipping={shipping}
+        formatPrice={formatPrice}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen pt-12 pb-12">
-      <CartHeader currentStep={step} />
+      <CartHeader currentStep={step === "payment_processing" ? "checkout" : step} />
 
       <main className="max-w-7xl mx-auto px-6">
         {step === "cart" && (
@@ -232,7 +292,7 @@ export default function CartInteractive() {
           />
         )}
 
-        {step === "checkout" && (
+        {(step === "checkout" || step === "payment_processing") && (
           <CheckoutStep
             items={items}
             form={form}
