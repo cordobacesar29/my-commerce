@@ -10,7 +10,7 @@ export const syncUserRecord = async (user: User | null) => {
     await setDoc(userRef, {
       uid: user.uid,
       email: user.email,
-      displayName: user.displayName || "Usuario TeeForge",
+      displayName: user.displayName || "Usuario sin nombre",
       photoURL: user.photoURL || "",
       lastLogin: serverTimestamp(),
       // Aquí podrías agregar 'role': 'customer' si planeas un panel admin
