@@ -54,13 +54,6 @@ export const CheckoutStep = ({
       <div className="lg:col-span-8 space-y-6">
         <PersonalInfoSection form={form} errors={errors} onFieldChange={onFieldChange} />
         <ShippingAddressSection form={form} errors={errors} onFieldChange={onFieldChange} />
-        <PaymentInfoSection
-          form={form}
-          errors={errors}
-          onFieldChange={onFieldChange}
-          formatCardNumber={formatCardNumber}
-          formatExpiry={formatExpiry}
-        />
         <CheckoutActions
           isProcessing={isProcessing}
           total={total}
@@ -212,71 +205,6 @@ interface PaymentInfoSectionProps {
   formatCardNumber: (val: string) => string;
   formatExpiry: (val: string) => string;
 }
-
-const PaymentInfoSection = ({
-  form,
-  errors,
-  onFieldChange,
-  formatCardNumber,
-  formatExpiry,
-}: PaymentInfoSectionProps) => {
-  return (
-    <FormSection title="Datos de pago" badge="Mercado Pago">
-      <div className="grid grid-cols-1 gap-4">
-        <CardNumberInput
-          value={form.cardNumber}
-          onChange={(val) => onFieldChange("cardNumber", formatCardNumber(val))}
-          error={errors.cardNumber}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormInput
-            label="Vencimiento *"
-            value={form.cardExpiry}
-            onChange={(val) => onFieldChange("cardExpiry", formatExpiry(val))}
-            error={errors.cardExpiry}
-            placeholder="MM/AA"
-            maxLength={5}
-          />
-
-          <FormInput
-            label="CVV *"
-            value={form.cardCvv}
-            onChange={(val) =>
-              onFieldChange("cardCvv", val.replace(/\D/g, "").slice(0, 4))
-            }
-            error={errors.cardCvv}
-            placeholder="123"
-            maxLength={4}
-          />
-        </div>
-
-        <FormInput
-          label="Nombre en la tarjeta *"
-          value={form.cardName}
-          onChange={(val) => onFieldChange("cardName", val.toUpperCase())}
-          error={errors.cardName}
-          placeholder="VALENTINA MORENO"
-        />
-      </div>
-
-      <p
-        className="text-xs mt-5 flex items-center gap-2"
-        style={{ color: "var(--text-muted)" }}
-      >
-        <Icon
-          name="LockClosedIcon"
-          size={12}
-          style={{
-            color: "var(--accent-gold)",
-            flexShrink: 0,
-          } as React.CSSProperties}
-        />
-        Tus datos están protegidos. Procesado por Mercado Pago.
-      </p>
-    </FormSection>
-  );
-};
 
 interface FormSectionProps {
   title: string;
