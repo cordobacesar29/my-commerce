@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { CartItem } from "@/schema/ICartItemSchema";
-import { Order, ShippingData } from "@/schema/IOrderSchema";
+import { ShippingData } from "@/schema/IOrderSchema";
 import { toast } from "sonner";
 import { CartHeader } from "./CartHeader";
 import { CartStep } from "./CartStep";
@@ -12,7 +12,13 @@ import { FailureStep } from "./FailureStep";
 import { PendingStep } from "./PendingStep";
 import { useAuth } from "@/context/AuthContext";
 
-export type StepKey = "cart" | "checkout" | "payment_processing" | "success" | "failure" | "pending";
+export type StepKey =
+  | "cart"
+  | "checkout"
+  | "payment_processing"
+  | "success"
+  | "failure"
+  | "pending";
 
 const EMPTY_FORM: ShippingData = {
   fullName: "",
@@ -34,6 +40,7 @@ export default function CartInteractive() {
   const [step, setStep] = useState<StepKey>("cart");
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<Partial<ShippingData>>({});
+
   const { user } = useAuth();
 
   // Load cart from localStorage
@@ -55,18 +62,18 @@ export default function CartInteractive() {
 
   // Load step from URL params (para regresar de MP)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     const status = params.get("status");
-    
+
     if (status === "success") {
       setStep("success");
-      window.history.replaceState({}, document.title, "/cart");
+      globalThis.history.replaceState({}, document.title, "/cart");
     } else if (status === "failure") {
       setStep("failure");
-      window.history.replaceState({}, document.title, "/cart");
+      globalThis.history.replaceState({}, document.title, "/cart");
     } else if (status === "pending") {
       setStep("pending");
-      window.history.replaceState({}, document.title, "/cart");
+      globalThis.history.replaceState({}, document.title, "/cart");
     }
   }, []);
 
@@ -80,7 +87,7 @@ export default function CartInteractive() {
 
   // Calculate totals
   const subtotal = items.reduce((s, i) => s + i.priceUnit * i.quantity, 0);
-  const shipping = subtotal > 8000 ? 0 : 1200;
+  const shipping = subtotal > 8000 ? 0 : 500;
   const total = subtotal + shipping;
 
   // Update item quantity
@@ -94,7 +101,7 @@ export default function CartInteractive() {
         )
         .filter((item) => item.quantity > 0);
       localStorage.setItem("teeforge-cart", JSON.stringify(updated));
-      window.dispatchEvent(new Event("teeforge-cart-update"));
+      globalThis.dispatchEvent(new Event("teeforge-cart-update"));
       return updated;
     });
   };
@@ -104,7 +111,7 @@ export default function CartInteractive() {
     setItems((prev) => {
       const updated = prev.filter((item) => item.id !== id);
       localStorage.setItem("teeforge-cart", JSON.stringify(updated));
-      window.dispatchEvent(new Event("teeforge-cart-update"));
+      globalThis.dispatchEvent(new Event("teeforge-cart-update"));
       return updated;
     });
   };
@@ -113,7 +120,7 @@ export default function CartInteractive() {
   const handleClearCart = () => {
     setItems([]);
     localStorage.removeItem("teeforge-cart");
-    window.dispatchEvent(new Event("teeforge-cart-update"));
+    globalThis.dispatchEvent(new Event("teeforge-cart-update"));
   };
 
   // Validate checkout form
@@ -125,12 +132,6 @@ export default function CartInteractive() {
     if (!form.address.trim()) errs.address = "Requerido";
     if (!form.city.trim()) errs.city = "Requerido";
     if (!form.province) errs.province = "Seleccioná una provincia";
-    if (form.cardNumber.replace(/\s/g, "").length < 16)
-      errs.cardNumber = "Número inválido";
-    if (!form.cardExpiry.match(/^\d{2}\/\d{2}$/))
-      errs.cardExpiry = "Formato MM/AA";
-    if (form.cardCvv.length < 3) errs.cardCvv = "CVV inválido";
-    if (!form.cardName.trim()) errs.cardName = "Requerido";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -147,10 +148,8 @@ export default function CartInteractive() {
     setStep("payment_processing");
 
     try {
-      // TODO: Conectar con Mercado Pago aquí
-      // Por ahora simulamos el flujo
-      
-      const orderPayload: Order = {
+      // 1. Preparamos el payload (tal como lo espera tu CreateOrderSchema)
+      const orderPayload = {
         userId: user.uid,
         items: items.map((item) => ({
           id: item.id,
@@ -161,48 +160,35 @@ export default function CartInteractive() {
           quantity: item.quantity,
           priceUnit: item.priceUnit,
           position: item.position,
+          prompt: item.prompt || "", // Asegúrate de incluir campos requeridos por el schema
         })),
-        shipping: {
-          fullName: form.fullName,
-          email: form.email,
-          phone: form.phone,
-          address: form.address,
-          city: form.city,
-          province: form.province,
-          zipCode: form.zipCode,
-        },
+        shipping: { ...form },
         total,
-        createdAt: new Date(),
-        status: "pending_payment",
       };
 
-      // Crear orden en Firestore primero
-      const orderResponse = await fetch("/api/checkout", {
+      // 2. UN SOLO FETCH: Crea la orden en DB y genera el link de Mercado Pago
+      const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload),
       });
 
-      const orderResult = await orderResponse.json();
+      const result = await response.json();
 
-      if (!orderResponse.ok) {
-        throw new Error(orderResult.error || "Error al crear la orden");
+      if (!response.ok) {
+        throw new Error(result.error || "Error al procesar la compra");
       }
 
-      // Aquí iría la redirección a Mercado Pago
-      // window.location.href = mpData.init_point;
-      
-      // Por ahora, simulamos éxito
-      setTimeout(() => {
-        localStorage.removeItem("teeforge-cart");
-        globalThis.dispatchEvent(new Event("teeforge-cart-update"));
-        setIsProcessing(false);
-        setStep("success");
-      }, 2000);
-
-    } catch (error) {
+      if (result.checkoutUrl) {
+        // Usamos replace para que el usuario no pueda volver atrás al checkout
+        // y accidentalmente duplicar la orden al re-enviar el formulario
+        globalThis.location.href = result.checkoutUrl;
+      } else {
+        throw new Error("No se recibió la URL de pago de Mercado Pago");
+      }
+    } catch (error: any) {
       console.error("Error en checkout:", error);
-      toast.error("Error al procesar el pago");
+      toast.error(error.message || "Error al procesar el pago");
       setIsProcessing(false);
       setStep("failure");
     }
@@ -211,6 +197,7 @@ export default function CartInteractive() {
   // Retry payment (va de failure -> checkout)
   const handleRetryPayment = () => {
     setStep("checkout");
+    setIsProcessing(false);
   };
 
   // Update form field
@@ -221,16 +208,30 @@ export default function CartInteractive() {
 
   // Format card number
   const formatCardNumber = (val: string) => {
-    const digits = val.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+    const digits = val.replaceAll(/\D/g, "").slice(0, 16);
+    return digits.replaceAll(/(\d{4})(?=\d)/g, "$1 ").trim();
   };
 
   // Format expiry
   const formatExpiry = (val: string) => {
-    const digits = val.replace(/\D/g, "").slice(0, 4);
+    const digits = val.replaceAll(/\D/g, "").slice(0, 4);
     if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
     return digits;
   };
+
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("status");
+
+  if (status === "success") {
+    // 1. Limpiar el carrito en el estado y localStorage
+    handleClearCart(); 
+    // 2. Mostrar un mensaje de éxito
+    toast.success("¡Gracias por tu compra! Tu pedido está siendo procesado.");
+    // 3. (Opcional) Limpiar la URL para que no diga ?status=success siempre
+    globalThis.history.replaceState({}, "", "/cart");
+  }
+}, []);
 
   // Render based on step
   if (step === "success") {
@@ -275,7 +276,9 @@ export default function CartInteractive() {
 
   return (
     <div className="min-h-screen pt-12 pb-12">
-      <CartHeader currentStep={step === "payment_processing" ? "checkout" : step} />
+      <CartHeader
+        currentStep={step === "payment_processing" ? "checkout" : step}
+      />
 
       <main className="max-w-7xl mx-auto px-6">
         {step === "cart" && (
