@@ -9,8 +9,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Token no proporcionado" }, { status: 400 });
     }
 
+    
+
     const expiresIn = 60* 60 * 24 *5 * 1000; // 5 días en milisegundos
     const cookieStore = await cookies();
+    
     cookieStore.set({
       maxAge: expiresIn,
       httpOnly: true,

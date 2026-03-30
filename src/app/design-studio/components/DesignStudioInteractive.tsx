@@ -57,7 +57,6 @@ export default function DesignStudioInteractive() {
 
     const mockImages = [
       "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=512&h=512&fit=crop&q=90",
-      "https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=512&h=512&fit=crop&q=90",
       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=512&h=512&fit=crop&q=90",
       "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=512&h=512&fit=crop&q=90",
     ];
