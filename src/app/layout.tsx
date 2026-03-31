@@ -27,6 +27,8 @@ const archivo = Archivo({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -35,6 +37,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "ramon_logo.svg",
   },
+  other: {
+    google: "notranslate",
+  }
 };
 
 export default function RootLayout({
@@ -43,7 +48,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" translate="no" className="notranslate">
+      <meta name="google" content="notranslate" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} antialiased`}
       >
