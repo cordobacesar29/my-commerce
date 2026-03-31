@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     // 1. Obtener query params y headers
     const searchParams = request.nextUrl.searchParams;
     const action = searchParams.get("action");
-    const paymentId = searchParams.get("data.id");
+    const paymentId = searchParams.get("data.id") || searchParams.get("id");
 
     const headersObj: Record<string, string | string[]> = {};
     request.headers.forEach((value, key) => {
@@ -183,17 +183,16 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
-    console.log(`Orden ${external_reference} actualizada a status: ${orderStatus}`);
-
     // 8. Si el pago es aprobado, actualizar contador del usuario
     if (status === "approved") {
       const orderDoc = await orderRef.get();
+      const { FieldValue } = await import("firebase-admin/firestore");
       if (orderDoc.exists) {
         const userId = orderDoc.data()?.userId;
         if (userId) {
           const userRef = adminDb.collection("users").doc(userId);
           await userRef.update({
-            totalOrders: require("firebase-admin").firestore.FieldValue.increment(1),
+            totalOrders: FieldValue.increment(1),
             lastOrderAt: new Date(),
           });
         }
