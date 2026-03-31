@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ContactData } from "@/schema/IOrderSchema";
+import { ContactData, CreateOrderSchema } from "@/schema/IOrderSchema";
 import { toast } from "sonner";
 import { CartHeader } from "./CartHeader";
 import { CartStep } from "./CartStep";
@@ -89,16 +89,33 @@ export default function CartInteractive() {
     clearCart();
   };
 
-  const validateForm = () => {
-    const errs: Partial<ContactData> = {};
-    if (!form.fullName.trim()) errs.fullName = "Requerido";
-    if (!form.email.includes("@")) errs.email = "Email inválido";
-    if (!form.phone.trim()) errs.phone = "Requerido";
-    if (!form.address.trim()) errs.address = "Requerido";
-    if (!form.city.trim()) errs.city = "Requerido";
-    if (!form.province) errs.province = "Seleccioná una provincia";
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+const validateForm = () => {
+    // 1. Preparamos un objeto dummy para validar contra el schema completo
+    const orderPayload = {
+      userId: user?.uid || "guest",
+      items: items,
+      shipping: form,
+      total: total,
+    };
+
+    const result = CreateOrderSchema.safeParse(orderPayload);
+
+    if (!result.success) {
+      const errs: Partial<ContactData> = {};
+      
+      // 2. Mapeamos los errores de Zod al estado 'errors'
+      result.error.issues.forEach((issue) => {
+        // Obtenemos el nombre del campo (ej: zipCode)
+        const field = issue.path.at(-1) as keyof ContactData;
+        errs[field] = issue.message;
+      });
+
+      setErrors(errs);
+      return false;
+    }
+
+    setErrors({});
+    return true;
   };
 
   const handleCheckout = async () => {

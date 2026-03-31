@@ -187,6 +187,7 @@ const ShippingAddressSection = ({
           label="Código postal"
           value={form.zipCode}
           onChange={(val) => onFieldChange("zipCode", val)}
+          error={errors.zipCode}
           placeholder="1414"
         />
       </div>
