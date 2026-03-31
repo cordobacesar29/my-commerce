@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/badge/version-0.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/Node.js-18%2B-brightgreen)
-
+[![Invitame un café en cafecito.app](https://cdn.cafecito.app/imgs/buttons/button_1.svg)](https://cafecito.app/ramon-store)
 > **Describí tu idea. Nuestra IA la convierte en diseño único. Visualizalo en 3D y pedí tu remera personalizada.**
 
 Ramón Store es una plataforma full-stack de diseño y comercio de remeras personalizadas que integra generación de imágenes con IA, visualización 3D interactiva, carrito de compra robusto, y procesamiento de pagos con Mercado Pago.
