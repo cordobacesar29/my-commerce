@@ -35,7 +35,7 @@ export const CartStep = ({
           <EmptyCartState formatPrice={formatPrice} />
         ) : (
           <>
-            {items.map((item) => (
+            {items?.map((item) => (
               <CartItemCard
                 key={item.id}
                 item={item}
@@ -118,6 +118,7 @@ const CartItemCard = ({
   onRemove,
   formatPrice,
 }: CartItemCardProps) => {
+
   return (
     <div
       className="p-6"
@@ -207,17 +208,17 @@ const CartItemInfo = ({
             className="font-heading font-bold text-sm mb-1"
             style={{ color: "var(--text-primary)" }}
           >
-            {item.prompt}
+            {item?.prompt}
           </h3>
           <p
             className="text-xs max-w-xs"
             style={{ color: "var(--text-muted)" }}
           >
-            "{item.prompt}"
+            "{item?.prompt}"
           </p>
         </div>
         <button
-          onClick={() => onRemove(item.id)}
+          onClick={() => onRemove(item?.id)}
           className="p-2 transition-colors flex-shrink-0 hover:bg-red-500/10"
           style={{ color: "var(--text-muted)" }}
           aria-label="Eliminar"
@@ -236,7 +237,7 @@ const CartItemInfo = ({
             color: "var(--text-secondary)",
           }}
         >
-          Talle {item.size}
+          Talle {item?.size}
         </span>
         <div
           className="flex items-center gap-1.5 text-[10px] font-heading uppercase tracking-wider"
@@ -245,25 +246,25 @@ const CartItemInfo = ({
           <div
             className="w-3 h-3 rounded-full border"
             style={{
-              background: item.colorHex,
+              background: item?.colorHex,
               borderColor: "var(--border-soft)",
             }}
           />
-          {item.colorName}
+          {item?.colorName}
         </div>
       </div>
 
       {/* Quantity & Price */}
       <div className="flex items-center justify-between">
         <QuantityControl
-          quantity={item.quantity}
-          onUpdateQty={(delta) => onUpdateQty(item.id, delta)}
+          quantity={item?.quantity}
+          onUpdateQty={(delta) => onUpdateQty(item?.id, delta)}
         />
 
         <PriceDisplay
-          price={item.priceUnit * item.quantity}
-          unitPrice={item.priceUnit}
-          quantity={item.quantity}
+          price={item?.priceUnit * item?.quantity}
+          unitPrice={item?.priceUnit}
+          quantity={item?.quantity}
           formatPrice={formatPrice}
         />
       </div>
@@ -420,11 +421,11 @@ const CartSummary = ({
 
         <button
           onClick={onProceedCheckout}
-          disabled={items.length === 0}
+          disabled={items?.length === 0}
           className="w-full py-4 bg-white text-black font-bold uppercase text-xs tracking-wider hover:bg-[var(--accent-gold)] transition-colors flex items-center justify-center gap-2"
           style={{
-            opacity: items.length === 0 ? 0.5 : 1,
-            cursor: items.length === 0 ? "not-allowed" : "pointer",
+            opacity: items?.length === 0 ? 0.5 : 1,
+            cursor: items?.length === 0 ? "not-allowed" : "pointer",
           }}
         >
           <span>Continuar al pago</span>

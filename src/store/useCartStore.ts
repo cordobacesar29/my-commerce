@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { CartItem } from '@/schema/ICartItemSchema';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { CartItem } from "@/schema/ICartItemSchema";
 
 interface CartState {
   items: CartItem[];
@@ -8,6 +8,7 @@ interface CartState {
   removeItem: (id: string) => void;
   clearCart: () => void;
   getTotal: () => number;
+  updateQuantity: (id: string, delta: number) => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -19,15 +20,16 @@ export const useCartStore = create<CartState>()(
         const currentItems = get().items;
         // Si el mismo diseño con el mismo talle ya está, sumamos cantidad
         const existingItem = currentItems.find(
-          (item) => item.designUrl === newItem.designUrl && item.size === newItem.size
+          (item) =>
+            item.designUrl === newItem.designUrl && item.size === newItem.size,
         );
 
         if (existingItem) {
           set({
-            items: currentItems.map((item) =>
-              item === existingItem 
-                ? { ...item, quantity: item.quantity + 1 } 
-                : item
+            items: currentItems?.map((item) =>
+              item === existingItem
+                ? { ...item, quantity: item.quantity + 1 }
+                : item,
             ),
           });
         } else {
@@ -35,18 +37,34 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      removeItem: (id) => set({
-        items: get().items.filter((item) => item.id !== id)
-      }),
+      removeItem: (id) =>
+        set({
+          items: get().items.filter((item) => item.id !== id),
+        }),
 
       clearCart: () => set({ items: [] }),
 
       getTotal: () => {
-        return get().items.reduce((acc, item) => acc + (item.priceUnit * item.quantity), 0);
+        return get().items.reduce(
+          (acc, item) => acc + item.priceUnit * item.quantity,
+          0,
+        );
+      },
+
+      updateQuantity: (id: string, delta: number) => {
+        set((state) => ({
+          items: state.items
+            .map((item) =>
+              item.id === id
+                ? { ...item, quantity: Math.max(0, item.quantity + delta) }
+                : item,
+            )
+            .filter((item) => item.quantity > 0),
+        }));
       },
     }),
     {
-      name: 'teeforge-cart', // Nombre de la llave en LocalStorage
-    }
-  )
+      name: "teeforge-cart", // Nombre de la llave en LocalStorage
+    },
+  ),
 );
