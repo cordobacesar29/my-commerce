@@ -21,17 +21,38 @@ export async function POST(req: NextRequest) {
 
     const orderData = validation.data;
 
-    // 2. Transacción en Firestore (Crear orden + Actualizar Usuario)
+    // --- CÁLCULOS DE SEGURIDAD EN EL SERVIDOR ---
+    // Recalculamos para asegurar que no se pisen o manipulen las cantidades/precios
+    const calculatedSubtotal = orderData.items.reduce(
+      (acc, item) => acc + (item.priceUnit * item.quantity), 
+      0
+    );
+
+    // Regla de negocio: Envío gratis > $8000, caso contrario $500
+    const calculatedShipping = calculatedSubtotal > 8000 ? 0 : 500;
+    const finalTotal = calculatedSubtotal + calculatedShipping;
+
+    // 2. Transacción en Firestore (Crear orden + Actualizar Usuario de forma atómica)
     const orderId = await adminDb.runTransaction(async (transaction) => {
       const userRef = adminDb.collection("users").doc(orderData.userId);
-      const orderRef = adminDb.collection("orders").doc(); // Genera ID automático
+      const userDoc = await transaction.get(userRef);
       
+      if (!userDoc.exists) {
+        throw new Error("El usuario no existe en la base de datos");
+      }
+
+      const orderRef = adminDb.collection("orders").doc(); // ID automático para la orden
+
       transaction.set(orderRef, {
         ...orderData,
-        status: "pending_payment",
+        total: finalTotal,
+        subtotal: calculatedSubtotal,
+        shippingFee: calculatedShipping,
+        status: "pending_payment", // Estado inicial
         createdAt: FieldValue.serverTimestamp(),
       });
 
+      // Incremento atómico para evitar errores de concurrencia
       transaction.update(userRef, {
         totalOrders: FieldValue.increment(1),
         lastOrderAt: FieldValue.serverTimestamp(),
@@ -40,52 +61,47 @@ export async function POST(req: NextRequest) {
       return orderRef.id;
     });
 
-    // 3. Preparar datos para Mercado Pago
+    // 3. Configuración de URLs y limpieza de datos para Mercado Pago
     const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const cleanBaseUrl = appBaseUrl.replace(/\/$/, "");
 
-    // Limpieza de teléfono y dirección (lo que tenías en la otra ruta)
+    // Formateo de teléfono (Mercado Pago espera area_code y number por separado)
     const rawPhone = String(orderData.shipping.phone || "");
     const normalizedPhone = rawPhone.replaceAll(/\D/g, "");
     const phone = normalizedPhone.length >= 3 
       ? { area_code: normalizedPhone.slice(0, 2), number: normalizedPhone.slice(2) }
       : undefined;
 
+    // Extracción de número de calle (fallback a 1 si no se encuentra)
     const streetNumberMatch = /\d+/.exec(orderData.shipping.address);
     const streetNumber = streetNumberMatch ? Number(streetNumberMatch[0]) : 1;
 
     // 4. Crear Preferencia en Mercado Pago
     const preference = new Preference(mercadoPagoClient);
     
+    // Mapeo de items del carrito al formato de MP
     const mpItems = orderData.items.map((item) => ({
       id: item.id,
       title: `Remera Ramon Store - Talle ${item.size}`,
       unit_price: item.priceUnit,
       quantity: item.quantity,
       currency_id: "ARS",
-      description: `Color: ${item.colorName}`,
+      description: `Color: ${item.colorName}, Posición: ${item.position}`,
       picture_url: (item as any).designUrl || ""
     }));
 
-    const subtotalProductos = orderData.items.reduce(
-  (acc: number, item: any) => acc + (item.priceUnit * item.quantity), 
-  0
-);
-
-const costoEnvio = orderData.total - subtotalProductos;
-
-// 3. Si hay costo de envío, lo agregamos como un ítem más
-if (costoEnvio > 0) {
-  mpItems.push({
-    id: "shipping-fee",
-    title: "Costo de Envío",
-    unit_price: costoEnvio, // Los otros $5
-    quantity: 1,
-    currency_id: "ARS",
-    description: "Envío a domicilio",
-    picture_url: "",
-  });
-}
+    // Si hay costo de envío, se agrega como un item adicional
+    if (calculatedShipping > 0) {
+      mpItems.push({
+        id: "shipping-fee",
+        title: "Costo de Envío",
+        unit_price: calculatedShipping,
+        quantity: 1,
+        currency_id: "ARS",
+        description: "Envío a domicilio",
+        picture_url: "",
+      });
+    }
 
     const createdPreference = await preference.create({
       body: {
@@ -106,22 +122,23 @@ if (costoEnvio > 0) {
           pending: `${cleanBaseUrl}/cart?status=pending`,
         },
         auto_return: "approved",
-        external_reference: orderId, // Vinculo fundamental para el Webhook
+        // El external_reference es la clave para que el Webhook sepa qué orden actualizar
+        external_reference: orderId, 
         notification_url: `${cleanBaseUrl}/api/mercado-pago/webhook`,
         statement_descriptor: "RAMON STORE",
       }
     });
 
-    // 5. Respuesta de éxito con la URL de MP
+    // 5. Respuesta final con la URL de redirección
     return NextResponse.json({
       success: true,
       orderId: orderId,
-      checkoutUrl: createdPreference.init_point, // Redirigir a esto en el front
-      message: "Orden creada y preferencia de pago generada"
+      checkoutUrl: createdPreference.init_point, 
+      message: "Orden procesada exitosamente"
     });
 
   } catch (err: any) {
-    console.error("Error en checkout unificado:", err);
+    console.error("Error en el proceso de checkout:", err);
     return NextResponse.json(
       { error: "No se pudo procesar la compra", details: err.message }, 
       { status: 500 }

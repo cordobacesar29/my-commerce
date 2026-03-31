@@ -2,7 +2,7 @@
 
 import Icon from "@/components/ui/AppIcon";
 import { CartItem } from "@/schema/ICartItemSchema";
-import { ShippingData } from "@/schema/IOrderSchema";
+import { ContactData } from "@/schema/IOrderSchema";
 
 const PROVINCES = [
   "Buenos Aires",
@@ -19,18 +19,16 @@ const PROVINCES = [
 
 interface CheckoutStepProps {
   items: CartItem[];
-  form: ShippingData;
+  form: ContactData;
   subtotal: number;
   shipping: number;
   total: number;
   isProcessing: boolean;
-  errors: Partial<ShippingData>;
-  onFieldChange: (key: keyof ShippingData, value: string) => void;
+  errors: Partial<ContactData>;
+  onFieldChange: (key: keyof ContactData, value: string) => void;
   onSubmit: () => void;
   onBackToCart: () => void;
   formatPrice: (p: number) => string;
-  formatCardNumber: (val: string) => string;
-  formatExpiry: (val: string) => string;
 }
 
 export const CheckoutStep = ({
@@ -45,8 +43,6 @@ export const CheckoutStep = ({
   onSubmit,
   onBackToCart,
   formatPrice,
-  formatCardNumber,
-  formatExpiry,
 }: CheckoutStepProps) => {
   return (
     <div className="grid lg:grid-cols-12 gap-10">
@@ -76,9 +72,9 @@ export const CheckoutStep = ({
 };
 
 interface PersonalInfoSectionProps {
-  form: ShippingData;
-  errors: Partial<ShippingData>;
-  onFieldChange: (key: keyof ShippingData, value: string) => void;
+  form: ContactData;
+  errors: Partial<ContactData>;
+  onFieldChange: (key: keyof ContactData, value: string) => void;
 }
 
 const PersonalInfoSection = ({
@@ -122,9 +118,9 @@ const PersonalInfoSection = ({
 };
 
 interface ShippingAddressSectionProps {
-  form: ShippingData;
-  errors: Partial<ShippingData>;
-  onFieldChange: (key: keyof ShippingData, value: string) => void;
+  form: ContactData;
+  errors: Partial<ContactData>;
+  onFieldChange: (key: keyof ContactData, value: string) => void;
 }
 
 const ShippingAddressSection = ({
@@ -197,14 +193,6 @@ const ShippingAddressSection = ({
     </FormSection>
   );
 };
-
-interface PaymentInfoSectionProps {
-  form: ShippingData;
-  errors: Partial<ShippingData>;
-  onFieldChange: (key: keyof ShippingData, value: string) => void;
-  formatCardNumber: (val: string) => string;
-  formatExpiry: (val: string) => string;
-}
 
 interface FormSectionProps {
   title: string;

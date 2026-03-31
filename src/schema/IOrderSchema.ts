@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { FieldValue, Timestamp } from "firebase/firestore";
 import { LogoPosition } from "./ICartItemSchema";
 
 export const ContactSchema = z.object({
@@ -9,7 +8,7 @@ export const ContactSchema = z.object({
   address: z.string().min(5, "La dirección es obligatoria"),
   city: z.string().min(2, "Ciudad obligatoria"),
   province: z.string().min(2, "Provincia obligatoria"),
-  zipCode: z.string().min(4, "Código postal inválido"),
+  zipCode: z.string().min(3, "Código postal inválido"),
 });
 
 
@@ -25,12 +24,7 @@ export const OrderItemSchema = z.object({
   position: z.enum(LogoPosition)
 });
 
-export const ShippingSchema = ContactSchema.extend({
-  cardNumber: z.string().regex(/^\d{16}$/, "Número de tarjeta inválido (16 dígitos)"),
-  cardExpiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Formato MM/YY inválido"),
-  cardCvv: z.string().min(3, "CVV inválido").max(4),
-  cardName: z.string().min(3, "Nombre en tarjeta obligatorio"),
-});
+
 
 export const CreateOrderSchema = z.object({
   userId: z.string(),
@@ -41,7 +35,8 @@ export const CreateOrderSchema = z.object({
 
 // 2. Tipos de TypeScript derivados de Zod
 export type OrderItem = z.infer<typeof OrderItemSchema>;
-export type ShippingData = z.infer<typeof ShippingSchema>;
+
+export type ContactData = z.infer<typeof ContactSchema>;
 export type OrderStatus = "pending_payment" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
 
 // 3. Interfaz completa para Firestore

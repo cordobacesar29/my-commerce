@@ -12,7 +12,7 @@ import {
 } from "@/schema/ICartItemSchema";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-
+import { useCartStore } from "@/store/useCartStore";
 const SHIRT_COLORS = [
   { hex: "#000000", name: "Negro" },
   { hex: "#2d2d2d", name: "Gris" },
@@ -37,6 +37,7 @@ export default function DesignStudioInteractive() {
   const [activeLogoPosition, setActiveLogoPosition] = useState<LogoPosition>(
     LogoPosition.FrontCenter,
   );
+  const addItem = useCartStore((state) => state.addItem);
 
   const totalPrice = BASE_PRICE * quantity;
   const { user } = useAuth();
@@ -66,7 +67,7 @@ export default function DesignStudioInteractive() {
     setIsGenerating(false);
   };
 
-  const handleAddToCart = () => {
+const handleAddToCart = () => {
     const rawItem: CartItem = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       prompt: prompt || "Diseño personalizado",
@@ -79,6 +80,7 @@ export default function DesignStudioInteractive() {
       position: activeLogoPosition,
     };
 
+    // Validación con Zod (¡Muy bien mantenido esto!)
     const result = cartItemSchema.safeParse(rawItem);
     if (!result.success) {
       const errorMsg = result.error.issues[0].message;
@@ -87,23 +89,17 @@ export default function DesignStudioInteractive() {
     }
 
     try {
-      const validatedItem = result.data;
-      const storageKey = "teeforge-cart";
+      // 2. USAR EL STORE EN LUGAR DE LOCALSTORAGE MANUAL
+      addItem(result.data); 
 
-      const existing = JSON.parse(
-        localStorage.getItem(storageKey) || "[]",
-      ) as CartItem[];
-
-      existing.push(validatedItem);
-      localStorage.setItem(storageKey, JSON.stringify(existing));
-
-      globalThis.dispatchEvent(new Event("teeforge-cart-update"));
-
+      // Ya no necesitas dispatchEvent ni JSON.stringify manual
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 3000);
       toast.success("Tu diseño se agregó al carrito");
+      
     } catch (err) {
       console.error("Error al guardar en el carrito:", err);
+      toast.error("Hubo un problema al guardar tu diseño");
     }
   };
 

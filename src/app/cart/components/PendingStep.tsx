@@ -3,11 +3,11 @@
 import Link from "next/link";
 import Icon from "@/components/ui/AppIcon";
 import { CartItem } from "@/schema/ICartItemSchema";
-import { ShippingData } from "@/schema/IOrderSchema";
+import { ContactData } from "@/schema/IOrderSchema";
 
 interface PendingStepProps {
   items: CartItem[];
-  form: ShippingData;
+  form: ContactData;
   total: number;
   subtotal: number;
   shipping: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShippingData } from "@/schema/IOrderSchema";
+import { ContactData } from "@/schema/IOrderSchema";
 import { toast } from "sonner";
 import { CartHeader } from "./CartHeader";
 import { CartStep } from "./CartStep";
@@ -20,7 +20,7 @@ export type StepKey =
   | "failure"
   | "pending";
 
-const EMPTY_FORM: ShippingData = {
+const EMPTY_FORM: ContactData = {
   fullName: "",
   email: "",
   phone: "",
@@ -28,20 +28,17 @@ const EMPTY_FORM: ShippingData = {
   city: "",
   province: "",
   zipCode: "",
-  cardNumber: "",
-  cardExpiry: "",
-  cardCvv: "",
-  cardName: "",
+
 };
 
 export default function CartInteractive() {
   // 1. Integración limpia con Zustand
   const { items, removeItem, clearCart, updateQuantity } = useCartStore();
   
-  const [form, setForm] = useState<ShippingData>(EMPTY_FORM);
+  const [form, setForm] = useState<ContactData>(EMPTY_FORM);
   const [step, setStep] = useState<StepKey>("cart");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [errors, setErrors] = useState<Partial<ShippingData>>({});
+  const [errors, setErrors] = useState<Partial<ContactData>>({});
   const [isMounted, setIsMounted] = useState(false);
 
   const { user } = useAuth();
@@ -93,7 +90,7 @@ export default function CartInteractive() {
   };
 
   const validateForm = () => {
-    const errs: Partial<ShippingData> = {};
+    const errs: Partial<ContactData> = {};
     if (!form.fullName.trim()) errs.fullName = "Requerido";
     if (!form.email.includes("@")) errs.email = "Email inválido";
     if (!form.phone.trim()) errs.phone = "Requerido";
@@ -115,6 +112,12 @@ export default function CartInteractive() {
     setStep("payment_processing");
 
     try {
+
+      const { 
+      fullName, email, phone, address, 
+      city, province, zipCode 
+    } = form;
+
       const orderPayload = {
         userId: user.uid,
         items: items.map((item) => ({
@@ -128,7 +131,7 @@ export default function CartInteractive() {
           position: item.position,
           prompt: item.prompt || "",
         })),
-        shipping: { ...form },
+        shipping: { fullName, email, phone, address, city, province, zipCode },
         total,
       };
 
@@ -162,20 +165,9 @@ export default function CartInteractive() {
     setIsProcessing(false);
   };
 
-  const handleFieldChange = (key: keyof ShippingData, value: string) => {
+  const handleFieldChange = (key: keyof ContactData, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
-  };
-
-  const formatCardNumber = (val: string) => {
-    const digits = val.replaceAll(/\D/g, "").slice(0, 16);
-    return digits.replaceAll(/(\d{4})(?=\d)/g, "$1 ").trim();
-  };
-
-  const formatExpiry = (val: string) => {
-    const digits = val.replaceAll(/\D/g, "").slice(0, 4);
-    if (digits.length >= 3) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return digits;
   };
 
   // 5. Guardia de Hidratación (Previene el error de Vercel en móviles)
@@ -262,8 +254,6 @@ export default function CartInteractive() {
             onSubmit={handleCheckout}
             onBackToCart={() => setStep("cart")}
             formatPrice={formatPrice}
-            formatCardNumber={formatCardNumber}
-            formatExpiry={formatExpiry}
           />
         )}
       </main>
