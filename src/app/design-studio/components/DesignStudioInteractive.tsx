@@ -11,7 +11,6 @@ import {
   ShirtSize,
 } from "@/schema/ICartItemSchema";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
 import { useCartStore } from "@/store/useCartStore";
 const SHIRT_COLORS = [
   { hex: "#000000", name: "Negro" },
@@ -40,7 +39,6 @@ export default function DesignStudioInteractive() {
   const addItem = useCartStore((state) => state.addItem);
 
   const totalPrice = BASE_PRICE * quantity;
-  const { user } = useAuth();
 
   const formatPrice = (p: number) =>
     new Intl.NumberFormat("es-AR", {
@@ -62,7 +60,7 @@ export default function DesignStudioInteractive() {
       "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=512&h=512&fit=crop&q=90",
     ];
     const mockUrl = mockImages[Math.floor(Math.random() * mockImages.length)];
-
+    toast.success("¡Diseño generado con éxito!");
     setGeneratedDesign(mockUrl);
     setIsGenerating(false);
   };

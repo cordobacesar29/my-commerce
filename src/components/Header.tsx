@@ -1,4 +1,5 @@
 import { HeaderNav } from "./HeaderNav";
+import { MobileDrawer } from "./ui/MobileDrawer";
 import { UserHeaderSection } from "./UserHeaderSection";
 
 export default function Header() {
@@ -15,9 +16,11 @@ export default function Header() {
 
       <HeaderNav />
 
-      <div className=" text-sm text-gray-400">
+      <div className="hidden md:block text-sm text-gray-400">
         <UserHeaderSection />
       </div>
+
+      <MobileDrawer />
     </div>
   );
 }
