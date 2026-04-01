@@ -22,7 +22,7 @@ const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
 const AI_PROMPTS = ["Lobo geométrico low-poly con luna llena dorada"];
 
-const BASE_PRICE = 5;
+const BASE_PRICE = 500;
 
 export default function DesignStudioInteractive() {
   const [prompt, setPrompt] = useState("");

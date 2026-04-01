@@ -66,7 +66,7 @@ export default function CartInteractive() {
 
   // 3. Cálculos derivados (Sin estados locales innecesarios)
   const subtotal = items.reduce((s, i) => s + (i.priceUnit * i.quantity), 0);
-  const shipping = subtotal > 8000 || subtotal === 0 ? 0 : 500;
+  const shipping = subtotal > 8000 || subtotal === 0 ? 0 : 5;
   const total = subtotal + shipping;
 
   const formatPrice = (p: number) =>
