@@ -1,3 +1,4 @@
+import { CartButton } from "@/app/cart/components/CartButton";
 import { HeaderNav } from "./HeaderNav";
 import { MobileDrawer } from "./ui/MobileDrawer";
 import { UserHeaderSection } from "./UserHeaderSection";
@@ -16,11 +17,14 @@ export default function Header() {
 
       <HeaderNav />
 
-      <div className="hidden md:block text-sm text-gray-400">
-        <UserHeaderSection />
+      <div className="flex items-center gap-1 md:gap-4">
+        {/* NUEVO: Botón de Carrito siempre visible */}
+        <CartButton />
+        <div className="hidden md:block text-sm text-gray-400">
+          <UserHeaderSection />
+        </div>
+        <MobileDrawer />
       </div>
-
-      <MobileDrawer />
     </div>
   );
 }

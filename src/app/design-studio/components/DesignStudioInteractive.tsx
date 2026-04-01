@@ -18,7 +18,7 @@ const SHIRT_COLORS = [
   { hex: "#F5F0E8", name: "Blanco" },
 ];
 
-const SIZES= ["XS", "S", "M", "L", "XL", "XXL"];
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
 const AI_PROMPTS = ["Lobo geométrico low-poly con luna llena dorada"];
 
@@ -65,7 +65,7 @@ export default function DesignStudioInteractive() {
     setIsGenerating(false);
   };
 
-const handleAddToCart = () => {
+  const handleAddToCart = () => {
     const rawItem: CartItem = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       prompt: prompt || "Diseño personalizado",
@@ -88,13 +88,12 @@ const handleAddToCart = () => {
 
     try {
       // 2. USAR EL STORE EN LUGAR DE LOCALSTORAGE MANUAL
-      addItem(result.data); 
+      addItem(result.data);
 
       // Ya no necesitas dispatchEvent ni JSON.stringify manual
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 3000);
       toast.success("Tu diseño se agregó al carrito");
-      
     } catch (err) {
       console.error("Error al guardar en el carrito:", err);
       toast.error("Hubo un problema al guardar tu diseño");
@@ -424,7 +423,7 @@ const handleAddToCart = () => {
 
               {/* HUD Controls */}
               <div
-                className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                className={`absolute bottom-6 whitespace-nowrap left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 transition-opacity duration-500 opacity-100 md:opacity-0 md:group-hover:opacity-100`}
                 style={{
                   background: "rgba(0, 0, 0, 0.4)",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -444,7 +443,7 @@ const handleAddToCart = () => {
                     className={`px-4 py-2 text-[9px] font-bold uppercase tracking-tighter transition-all ${
                       activeLogoPosition === pos.id
                         ? "text-[var(--accent-gold)] bg-white/10"
-                        : "text-white/60 hover:text-white hover:bg-white/5"
+                        : "text-white/60 active:text-white active:bg-white/5 md:hover:text-white md:hover:bg-white/5"
                     }`}
                   >
                     {pos.label}
