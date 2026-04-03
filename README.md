@@ -969,11 +969,11 @@ Las contribuciones son bienvenidas. Por favor:
 
 ## 📞 Contacto & Soporte
 
-**Email**: cesar@ramonstore.com  
+**Email**: cordobacesar29@gmail.com  
 **GitHub Issues**: https://github.com/cordobacesar29/my-commerce/issues
 
 ---
 
 **Hecho con ❤️ para creadores que aman el diseño y la tecnología.**
 
-**Ramón Store © 2024-2025**
+**Ramón Store © 2026**
