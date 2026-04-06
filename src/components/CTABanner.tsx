@@ -9,7 +9,7 @@ export default function CTABanner() {
   ];
 
   return (
-    <section className="pt-20 relative">
+    <section className="relative">
       <div className="max-w-7xl mx-auto px-6">
         <div className="relative overflow-hidden p-12 md:p-20 text-center border border-[#C8A96E]/20">
           {/* Grid de fondo corregido para que sea sutil */}

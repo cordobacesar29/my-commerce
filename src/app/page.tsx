@@ -1,3 +1,4 @@
+import ContributorsSection from '@/components/Contributorsection';
 import CTABanner from '@/components/CTABanner';
 import HeroSection from '@/components/HeroSection';
 import HowItWorks from '@/components/HowItWorks';
@@ -15,6 +16,7 @@ export const HomePage = () => {
     <div className="relative min-h-screen text-white">
       <HeroSection />
       <HowItWorks />
+      <ContributorsSection/>
       <CTABanner />
     </div>
   )
