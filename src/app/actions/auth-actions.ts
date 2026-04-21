@@ -19,7 +19,7 @@ export async function createAuthSession(uid: string) {
   
   cookieStore.set("user-role", role, {
     path: "/",
-    httpOnly: false, // Para que el middleware lo lea
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 7,
   });
