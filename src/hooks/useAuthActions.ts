@@ -54,10 +54,11 @@ export const useAuthActions = () => {
       await removeAuthSession();
       clearCart()
       router.push("/");
+      router.refresh();
     } catch (error) {
       console.error(error);
     }
-  }, [router]);
+  }, [router, clearCart]);
 
   return { loginWithGoogle, logout, loading, error };
 };
