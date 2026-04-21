@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
       if (currentUser) {
         try {
-          await syncUserRecord(user);
+          await syncUserRecord(currentUser);
           const cartDoc = await getDoc(doc(db, "users", currentUser.uid, "cart", "current"));
           if (cartDoc.exists()) {
             const remoteItems = cartDoc.data().items;
@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           }
 
           const idToken = await currentUser.getIdToken();
-          await fetch("api/auth/session", {
+          await fetch("/api/auth/session", {
             method: "POST",
             body: JSON.stringify({ idToken }),
             headers: {
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } else {
         clearCart(); // Limpia el carrito local al cerrar sesión
-        await fetch("api/auth/session", {
+        await fetch("/api/auth/session", {
           method: "DELETE",
         });
       }
