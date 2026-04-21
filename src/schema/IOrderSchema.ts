@@ -11,13 +11,54 @@ const imageUrlSchema = z
   .or(z.string().startsWith("data:image"));
 
 export const ContactSchema = z.object({
-  fullName: z.string().min(3, "El nombre es muy corto"),
-  email: z.string().email("Email invalido"),
-  phone: z.string().min(8, "Telefono invalido"),
-  address: z.string().min(5, "La direccion es obligatoria"),
-  city: z.string().min(2, "Ciudad obligatoria"),
-  province: z.string().min(2, "Provincia obligatoria"),
-  zipCode: z.string().min(3, "Codigo postal invalido"),
+  fullName: z
+    .string()
+    .trim()
+    .min(3, "El nombre debe tener al menos 3 caracteres")
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "El nombre solo puede contener letras"),
+
+  email: z
+    .string()
+    .trim()
+    .email("Formato de email inválido")
+    .toLowerCase(),
+
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\d+$/, "El teléfono solo debe contener números")
+    .min(8, "El teléfono debe tener al menos 8 dígitos")
+    .max(15, "El teléfono es demasiado largo"),
+
+  address: z
+    .string()
+    .trim()
+    .min(5, "La dirección debe ser más específica")
+    .regex(
+      /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,]+$/,
+      "La dirección solo puede contener letras, números, puntos y comas"
+    ),
+
+  city: z
+    .string()
+    .trim()
+    .min(2, "Ciudad obligatoria")
+    .regex(
+      /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,]+$/,
+      "La dirección solo puede contener letras, números, puntos y comas"
+    ),
+
+  province: z
+    .string()
+    .trim()
+    .min(2, "Provincia obligatoria"),
+
+  zipCode: z
+    .string()
+    .trim()
+    .regex(/^\d+$/, "El código postal solo debe contener números")
+    .min(4, "Código postal demasiado corto")
+    .max(8, "Código postal demasiado largo"),
 });
 
 export const DesignSideSchema = z.enum(["front", "back"]);
