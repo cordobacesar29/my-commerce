@@ -7,6 +7,7 @@ export const UserRoleSchema = z.enum([
 ]);
 
 export type IUserRole = z.infer<typeof UserRoleSchema>;
+export type UserRole = IUserRole;
 
 export const USER_ROLES = {
   SUPER_ADMIN: "SUPER_ADMIN",
