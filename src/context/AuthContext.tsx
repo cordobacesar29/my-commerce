@@ -10,6 +10,9 @@ import React, {
 import { auth } from "../lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { syncUserRecord } from "@/lib/user-sevice";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useCartStore } from "@/store/useCartStore";
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +29,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { clearCart, setItems } = useCartStore();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -33,8 +38,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (currentUser) {
         try {
           await syncUserRecord(user);
-          const idToken = await currentUser.getIdToken();
+          const cartDoc = await getDoc(doc(db, "users", currentUser.uid, "cart", "current"));
+          if (cartDoc.exists()) {
+            const remoteItems = cartDoc.data().items;
+            setItems(remoteItems); // Actualiza Zustand con lo que había en la nube
+          }
 
+          const idToken = await currentUser.getIdToken();
           await fetch("api/auth/session", {
             method: "POST",
             body: JSON.stringify({ idToken }),
@@ -46,6 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           console.error("Error en la sincronización de sesión:", error);
         }
       } else {
+        clearCart(); // Limpia el carrito local al cerrar sesión
         await fetch("api/auth/session", {
           method: "DELETE",
         });
@@ -53,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [clearCart, setItems]);
 
   const value = useMemo(() => ({ user, loading }), [user, loading]);
 
