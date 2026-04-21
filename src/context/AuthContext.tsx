@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
       if (currentUser) {
         try {
-          await syncUserRecord(user);
+          await syncUserRecord(currentUser);
           const cartDoc = await getDoc(doc(db, "users", currentUser.uid, "cart", "current"));
           if (cartDoc.exists()) {
             const remoteItems = cartDoc.data().items;
