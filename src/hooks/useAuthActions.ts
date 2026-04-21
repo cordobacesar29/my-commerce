@@ -1,14 +1,12 @@
 "use client";
 
 import { useCallback, useState, useRef } from "react";
-import {
-  signOut,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from "firebase/auth";
+import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebase";
+import { createAuthSession, removeAuthSession } from "@/app/actions/auth-actions";
+import { useCartStore } from "@/store/useCartStore";
 
 const provider = new GoogleAuthProvider();
 
@@ -17,47 +15,49 @@ export const useAuthActions = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const isCapturing = useRef(false);
+  const {clearCart} = useCartStore()
+  const loginWithGoogle = useCallback(async () => {
+    if (isCapturing.current) return;
+    isCapturing.current = true;
+    setLoading(true);
 
-const loginWithGoogle = useCallback(async () => {
-  if (isCapturing.current) return;
-  isCapturing.current = true;
-  setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, provider);
 
-  try {
-    const result = await signInWithPopup(auth, provider);
-    
-    if (result) {
-      // Importante: No borrar el router.refresh() ya que es el que 
-      // actualiza los Server Components/Middleware
-      router.refresh(); 
-      // RETORNAMOS EL RESULTADO (o result.user)
-      return result; 
-    }
-  } catch (err) {
-    if (err instanceof FirebaseError) {
-      if (err.code === "auth/popup-closed-by-user") {
-        setError("El proceso fue cancelado.");
-      } else {
-        setError("Error al iniciar sesión con Google.");
+      if (result) {
+        await createAuthSession(result.user.uid);
+        // Importante: No borrar el router.refresh() ya que es el que
+        // actualiza los Server Components/Middleware
+        router.refresh();
+        return result;
       }
-    } else {
-      setError("Ocurrió un error inesperado.");
+    } catch (err) {
+      if (err instanceof FirebaseError) {
+        if (err.code === "auth/popup-closed-by-user") {
+          setError("El proceso fue cancelado.");
+        } else {
+          setError("Error al iniciar sesión con Google.");
+        }
+      } else {
+        setError("Ocurrió un error inesperado.");
+      }
+      return null;
+    } finally {
+      setLoading(false);
+      isCapturing.current = false;
     }
-    return null; 
-  } finally {
-    setLoading(false);
-    isCapturing.current = false;
-  }
-}, [router]);
+  }, [router]);
 
- const logout = useCallback(async () => {
-  try {
-    await signOut(auth); 
-    router.push("/");
-  } catch (error) {
-    console.error(error);
-  }
-}, [router]);
+  const logout = useCallback(async () => {
+    try {
+      await signOut(auth);
+      await removeAuthSession();
+      clearCart()
+      router.push("/");
+    } catch (error) {
+      console.error(error);
+    }
+  }, [router]);
 
   return { loginWithGoogle, logout, loading, error };
 };

@@ -1,35 +1,54 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { USER_ROLES, type UserRole } from "@/types/roles";
+
+function redirectToHome(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/";
+  url.search = "";
+
+  return NextResponse.redirect(url);
+}
 
 export function middleware(request: NextRequest) {
-  // 1. Obtener el token de las cookies
   const session = request.cookies.get("token")?.value;
+  const userRole = request.cookies.get("user-role")?.value as UserRole | undefined;
   const { pathname } = request.nextUrl;
 
-  // 2. Definir rutas protegidas
-  const protectedRoutes = ["/design-studio", "/cart"];
-  
-  const isProtectedRoute = protectedRoutes.some((route) => 
-    pathname.startsWith(route)
-  );
+  const isCustomerRoute =
+    pathname.startsWith("/design-studio") || pathname.startsWith("/cart");
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isAdminRoute = pathname.startsWith("/admin");
 
-  // 3. Lógica de redirección
-  if (isProtectedRoute && !session) {
-    // Clonamos la URL base y cambiamos el path al Home
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    // Limpiamos los parámetros para evitar loops infinitos
-    url.search = ""; 
-    
-    return NextResponse.redirect(url);
+  if (isCustomerRoute && !session) {
+    return redirectToHome(request);
+  }
+
+  if (isDashboardRoute) {
+    const hasDashboardAccess =
+      userRole === USER_ROLES.STORE_OWNER ||
+      userRole === USER_ROLES.SUPER_ADMIN;
+
+    if (!session || !hasDashboardAccess) {
+      return redirectToHome(request);
+    }
+  }
+
+  if (isAdminRoute) {
+    const isSuperAdmin = userRole === USER_ROLES.SUPER_ADMIN;
+
+    if (!session || !isSuperAdmin) {
+      return redirectToHome(request);
+    }
   }
 
   return NextResponse.next();
 }
 
-// 4. Matcher optimizado
 export const config = {
   matcher: [
+    "/admin/:path*",
+    "/dashboard/:path*",
     "/design-studio/:path*",
     "/cart/:path*",
   ],

@@ -1,6 +1,23 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { CartItem } from "@/schema/ICartItemSchema";
+import { auth, db } from "../lib/firebase"; // Asegúrate de tener estas importaciones
+import { doc, setDoc } from "firebase/firestore";
+
+const syncCartToFirestore = async (items: CartItem[]) => {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return; // Si no hay usuario, solo queda en localStorage
+
+  try {
+    const cartRef = doc(db, "users", currentUser.uid, "cart", "current");
+    await setDoc(cartRef, {
+      items,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error sincronizando carrito con Firestore:", error);
+  }
+};
 
 interface CartState {
   items: CartItem[];
@@ -9,6 +26,7 @@ interface CartState {
   clearCart: () => void;
   getTotal: () => number;
   updateQuantity: (id: string, delta: number) => void;
+  setItems: (newItems: CartItem[]) => void;
 }
 
 export const useCartStore = create<CartState>()(
@@ -18,8 +36,6 @@ export const useCartStore = create<CartState>()(
 
       addItem: (newItem) => {
         const currentItems = get().items;
-
-        // Buscamos si ya existe un producto con el mismo diseño, talle y color
         const existingIndex = currentItems.findIndex(
           (item) =>
             item.designUrl === newItem.designUrl &&
@@ -27,24 +43,28 @@ export const useCartStore = create<CartState>()(
             item.colorHex === newItem.colorHex
         );
 
+        let updatedItems;
         if (existingIndex !== -1) {
-          // Si existe, actualizamos la cantidad de ese elemento específico
-          const updatedItems = [...currentItems];
+          updatedItems = [...currentItems];
           updatedItems[existingIndex] = {
             ...updatedItems[existingIndex],
             quantity: updatedItems[existingIndex].quantity + newItem.quantity,
           };
-          set({ items: updatedItems });
         } else {
-          // Si es nuevo, lo agregamos al array
-          set({ items: [...currentItems, newItem] });
+          updatedItems = [...currentItems, newItem];
         }
+
+        set({ items: updatedItems });
+        syncCartToFirestore(updatedItems); // Sincroniza
       },
 
-      removeItem: (id) =>
-        set((state) => ({
-          items: state.items.filter((item) => item.id !== id),
-        })),
+      removeItem: (id) => {
+        const updatedItems = get().items.filter((item) => item.id !== id);
+        set({ items: updatedItems });
+        syncCartToFirestore(updatedItems); // Sincroniza
+      },
+
+      setItems: (newItems: CartItem[]) => set({ items: newItems }),
 
       clearCart: () => set({ items: [] }),
 

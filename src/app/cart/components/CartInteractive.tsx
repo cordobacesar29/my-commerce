@@ -31,6 +31,56 @@ const EMPTY_FORM: ContactData = {
 
 };
 
+const DEFAULT_STORE_ID = process.env.NEXT_PUBLIC_STORE_ID || "ramon-store";
+
+const getPlacementSnapshot = (position: string) => {
+  switch (position) {
+    case "front_chest":
+      return {
+        side: "front" as const,
+        preset: "front_chest" as const,
+        anchor: "chest" as const,
+        position: [0.1, 0.08, 0.125] as [number, number, number],
+        rotation: [0, 0, 0] as [number, number, number],
+        scale: 0.14,
+      };
+    case "back_center":
+      return {
+        side: "back" as const,
+        preset: "back_center" as const,
+        anchor: "center" as const,
+        position: [0, 0.1, -0.16] as [number, number, number],
+        rotation: [0, Math.PI, 0] as [number, number, number],
+        scale: 0.23,
+      };
+    case "front_center":
+    default:
+      return {
+        side: "front" as const,
+        preset: "front_center" as const,
+        anchor: "center" as const,
+        position: [0, 0.04, 0.15] as [number, number, number],
+        rotation: [0, 0, 0] as [number, number, number],
+        scale: 0.25,
+      };
+  }
+};
+
+const buildOrderItems = (items: ReturnType<typeof useCartStore.getState>["items"]) =>
+  items.map((item) => ({
+    id: item.id,
+    colorName: item.colorName,
+    colorHex: item.colorHex,
+    size: item.size,
+    quantity: item.quantity,
+    priceUnit: item.priceUnit,
+    design: {
+      prompt: item.prompt || "Diseño personalizado",
+      imageUrl: item.designUrl,
+      placement: getPlacementSnapshot(item.position),
+    },
+  }));
+
 export default function CartInteractive() {
   // 1. Integración limpia con Zustand
   const { items, removeItem, clearCart, updateQuantity } = useCartStore();
@@ -92,8 +142,9 @@ export default function CartInteractive() {
 const validateForm = () => {
     // 1. Preparamos un objeto dummy para validar contra el schema completo
     const orderPayload = {
+      storeId: DEFAULT_STORE_ID,
       userId: user?.uid || "guest",
-      items: items,
+      items: buildOrderItems(items),
       shipping: form,
       total: total,
     };
@@ -136,18 +187,9 @@ const validateForm = () => {
     } = form;
 
       const orderPayload = {
+        storeId: DEFAULT_STORE_ID,
         userId: user.uid,
-        items: items.map((item) => ({
-          id: item.id,
-          designUrl: item.designUrl,
-          colorName: item.colorName,
-          colorHex: item.colorHex,
-          size: item.size,
-          quantity: item.quantity,
-          priceUnit: item.priceUnit,
-          position: item.position,
-          prompt: item.prompt || "",
-        })),
+        items: buildOrderItems(items),
         shipping: { fullName, email, phone, address, city, province, zipCode },
         total,
       };
@@ -169,9 +211,11 @@ const validateForm = () => {
       } else {
         throw new Error("No se recibió la URL de pago");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error en checkout:", error);
-      toast.error(error.message || "Error al procesar el pago");
+      const message =
+        error instanceof Error ? error.message : "Error al procesar el pago";
+      toast.error(message);
       setIsProcessing(false);
       setStep("failure");
     }
