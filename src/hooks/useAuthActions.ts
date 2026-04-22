@@ -24,6 +24,17 @@ export const useAuthActions = () => {
       const result = await signInWithPopup(auth, provider);
 
       if (result) {
+        const idToken = await result.user.getIdToken();
+        const sessionResponse = await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken }),
+        });
+
+        if (!sessionResponse.ok) {
+          throw new Error("No se pudo crear la sesión del usuario");
+        }
+
         // Importante: No borrar el router.refresh() ya que es el que
         // actualiza los Server Components/Middleware
         router.refresh();
