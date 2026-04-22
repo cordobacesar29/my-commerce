@@ -66,7 +66,11 @@ export const useCartStore = create<CartState>()(
 
       setItems: (newItems: CartItem[]) => set({ items: newItems }),
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => {
+        const emptyCart: CartItem[] = [];
+        set({ items: emptyCart });
+        syncCartToFirestore(emptyCart);
+      },
 
       getTotal: () => {
         return get().items.reduce(
@@ -76,15 +80,15 @@ export const useCartStore = create<CartState>()(
       },
 
       updateQuantity: (id: string, delta: number) => {
-        set((state) => ({
-          items: state.items
-            .map((item) =>
-              item.id === id
-                ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-                : item
-            )
-            .filter((item) => item.quantity > 0),
-        }));
+        const updatedItems = get()
+          .items
+          .map((item) =>
+            item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
+          )
+          .filter((item) => item.quantity > 0);
+
+        set({ items: updatedItems });
+        syncCartToFirestore(updatedItems);
       },
     }),
     {

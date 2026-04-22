@@ -5,7 +5,6 @@ import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebase";
-import { createAuthSession, removeAuthSession } from "@/app/actions/auth-actions";
 import { useCartStore } from "@/store/useCartStore";
 
 const provider = new GoogleAuthProvider();
@@ -25,7 +24,17 @@ export const useAuthActions = () => {
       const result = await signInWithPopup(auth, provider);
 
       if (result) {
-        await createAuthSession(result.user.uid);
+        const idToken = await result.user.getIdToken();
+        const sessionResponse = await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken }),
+        });
+
+        if (!sessionResponse.ok) {
+          throw new Error("No se pudo crear la sesión del usuario");
+        }
+
         // Importante: No borrar el router.refresh() ya que es el que
         // actualiza los Server Components/Middleware
         router.refresh();
@@ -51,7 +60,6 @@ export const useAuthActions = () => {
   const logout = useCallback(async () => {
     try {
       await signOut(auth);
-      await removeAuthSession();
       clearCart()
       router.push("/");
       router.refresh();

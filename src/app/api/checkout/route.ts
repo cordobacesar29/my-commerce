@@ -47,12 +47,8 @@ export async function POST(req: NextRequest) {
         subtotal: calculatedSubtotal,
         shippingFee: calculatedShipping,
         status: "pending_payment",
+        mpPaymentStatus: "pending",
         createdAt: FieldValue.serverTimestamp(),
-      });
-
-      transaction.update(userRef, {
-        totalOrders: FieldValue.increment(1),
-        lastOrderAt: FieldValue.serverTimestamp(),
       });
 
       return orderRef.id;
@@ -112,9 +108,9 @@ export async function POST(req: NextRequest) {
           },
         },
         back_urls: {
-          success: `${cleanBaseUrl}/cart?status=success`,
-          failure: `${cleanBaseUrl}/cart?status=failure`,
-          pending: `${cleanBaseUrl}/cart?status=pending`,
+          success: `${cleanBaseUrl}/cart?status=success&orderId=${orderId}`,
+          failure: `${cleanBaseUrl}/cart?status=failure&orderId=${orderId}`,
+          pending: `${cleanBaseUrl}/cart?status=pending&orderId=${orderId}`,
         },
         auto_return: "approved",
         external_reference: orderId,
