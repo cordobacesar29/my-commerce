@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 interface MPPaymentDetail {
   id: string;
@@ -21,7 +22,7 @@ async function getPaymentDetail(paymentId: string): Promise<MPPaymentDetail | nu
 
     if (!response.ok) return null;
     return await response.json();
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -74,6 +75,15 @@ export async function POST(request: NextRequest) {
     // 4. Actualizar Firestore
     const orderStatus = mapMPStatusToOrderStatus(status);
     const orderRef = adminDb.collection("orders").doc(external_reference);
+    const orderDoc = await orderRef.get();
+
+    if (!orderDoc.exists) {
+      return NextResponse.json({ status: "ignored", reason: "Order not found" }, { status: 200 });
+    }
+
+    const orderData = orderDoc.data();
+    const previousOrderStatus = orderData?.status as string | undefined;
+    const userId = orderData?.userId as string | undefined;
 
     // Usamos update para no sobreescribir otros datos de la orden
     await orderRef.update({
@@ -83,27 +93,62 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
-    // 5. Lógica de usuario (Incrementar contador)
-    if (status === "approved") {
-      const orderDoc = await orderRef.get();
-      if (orderDoc.exists) {
-        const userId = orderDoc.data()?.userId;
-        if (userId) {
-          const { FieldValue } = await import("firebase-admin/firestore");
-          await adminDb.collection("users").doc(userId).update({
+    const transitionedToPaid = previousOrderStatus !== "paid" && orderStatus === "paid";
+
+    // 5. Lógica de usuario (idempotente): archivar compra y limpiar carrito
+    if (transitionedToPaid && userId) {
+      const userRef = adminDb.collection("users").doc(userId);
+      const purchaseRef = userRef.collection("purchases").doc(external_reference);
+      const cartRef = userRef.collection("cart").doc("current");
+      const items = Array.isArray(orderData?.items) ? orderData.items : [];
+      const itemsCount = items.reduce((acc: number, item: { quantity?: number }) => {
+        return acc + (item.quantity ?? 0);
+      }, 0);
+
+      await adminDb.runTransaction(async (transaction) => {
+        transaction.set(
+          purchaseRef,
+          {
+            orderId: external_reference,
+            storeId: orderData?.storeId ?? null,
+            userId,
+            status: "paid",
+            total: orderData?.total ?? 0,
+            itemsCount,
+            updatedAt: FieldValue.serverTimestamp(),
+            paidAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+
+        transaction.set(
+          cartRef,
+          {
+            items: [],
+            updatedAt: new Date().toISOString(),
+            archivedOrderId: external_reference,
+          },
+          { merge: true },
+        );
+
+        transaction.set(
+          userRef,
+          {
             totalOrders: FieldValue.increment(1),
-            lastOrderAt: new Date(),
-          });
-        }
-      }
+            lastOrderAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+      });
     }
 
     return NextResponse.json({ status: "success" }, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Aquí capturamos cualquier error para que no devuelva 500 pelado
-    console.error("❌ Error Webhook Detail:", error.message);
-    return NextResponse.json({ error: "Processed with error", msg: error.message }, { status: 200 });
+    const message = error instanceof Error ? error.message : "Unknown webhook error";
+    console.error("❌ Error Webhook Detail:", message);
+    return NextResponse.json({ error: "Processed with error", msg: message }, { status: 200 });
   }
 }
 

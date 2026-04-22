@@ -112,6 +112,7 @@ export const CreateOrderSchema = z.object({
 export const OrderStatusSchema = z.enum([
   "pending_payment",
   "paid",
+  "failed",
   "processing",
   "shipped",
   "delivered",
