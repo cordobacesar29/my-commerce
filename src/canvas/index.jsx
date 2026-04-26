@@ -1,9 +1,14 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Environment, Center } from "@react-three/drei";
+import { Environment, Center, useProgress, Html } from "@react-three/drei";
 import Shirt from "./Shirt";
 import { Suspense } from "react";
+
+function Loader() {
+  const { progress } = useProgress()
+  return <Html>{progress} % loaded</Html>
+}
 
 export default function CanvasModel({
   customLogo = "",
@@ -23,7 +28,7 @@ export default function CanvasModel({
 
       <Center>
         <group scale={2.5}>
-          <Suspense fallback={null}>
+          <Suspense fallback={<Loader />}>
             {/* Pasamos las props recibidas hacia el componente Shirt */}
             <Shirt
               customLogo={customLogo}

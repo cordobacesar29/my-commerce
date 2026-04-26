@@ -47,9 +47,6 @@ export async function POST(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
     const paymentId = body.data?.id || searchParams.get("data.id") || searchParams.get("id");
-    const action = body.action || searchParams.get("action") || searchParams.get("topic");
-
-    console.log("🔔 Webhook:", { action, paymentId });
 
     // 2. Si no hay ID, no podemos hacer nada
     if (!paymentId) {
@@ -62,7 +59,6 @@ export async function POST(request: NextRequest) {
     // SI ES UNA SIMULACIÓN CON ID "123456", paymentDetail será null.
     // Respondemos 200 para que MP no siga reintentando, pero avisamos en el log.
     if (!paymentDetail) {
-      console.log(`⚠️ Pago ${paymentId} no encontrado en MP (Probablemente una simulación)`);
       return NextResponse.json({ status: "ok", message: "Simulated or not found" }, { status: 200 });
     }
 
@@ -120,6 +116,20 @@ export async function POST(request: NextRequest) {
           },
           { merge: true },
         );
+        // Alimentar el VAULT (Baúl de diseños comprados)
+        items.forEach((item: any) => {
+          const designVaultRef = userRef.collection("vault").doc(item.id);
+          transaction.set(designVaultRef, {
+            ...item.design, // Incluye prompt, imageUrl, placement
+            purchasedAt: FieldValue.serverTimestamp(),
+            orderId: external_reference,
+            productDetails: {
+              size: item.size,
+              colorName: item.colorName,
+              colorHex: item.colorHex
+            }
+          }, { merge: true });
+        });
 
         transaction.set(
           cartRef,
@@ -147,7 +157,6 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     // Aquí capturamos cualquier error para que no devuelva 500 pelado
     const message = error instanceof Error ? error.message : "Unknown webhook error";
-    console.error("❌ Error Webhook Detail:", message);
     return NextResponse.json({ error: "Processed with error", msg: message }, { status: 200 });
   }
 }
