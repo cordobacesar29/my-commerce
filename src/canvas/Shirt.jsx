@@ -28,6 +28,8 @@ const LOGO_LOCATIONS = {
   },
 };
 
+useGLTF.preload("/shirt_baked.glb");
+
 const Shirt = ({ customLogo = null, autoRotate = false, logoPosition = 'front_center' }) => {
   const snap = useSnapshot(state);
   const { gl, size } = useThree();
